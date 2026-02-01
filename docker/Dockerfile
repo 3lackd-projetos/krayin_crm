@@ -31,16 +31,16 @@ RUN apk add --no-cache \
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install \
-        pdo_mysql \
-        mbstring \
-        exif \
-        pcntl \
-        bcmath \
-        gd \
-        zip \
-        intl \
-        soap \
-        opcache
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    intl \
+    soap \
+    opcache
 
 # Get composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -54,8 +54,8 @@ COPY --from=assets /app/public/build ./public/build
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Configuration
-COPY nginx.conf /etc/nginx/http.d/default.conf
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY docker/nginx.conf /etc/nginx/http.d/default.conf
+COPY docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 # Permissions
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
