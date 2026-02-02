@@ -9,9 +9,12 @@ set_env_var() {
     VAR_VALUE=$2
     if [ ! -z "$VAR_VALUE" ]; then
         if [ -f .env ] && grep -q "^$VAR_NAME=" .env; then
-            sed -i "s|^$VAR_NAME=.*|$VAR_NAME=$VAR_VALUE|" .env
+            # Use double quotes for the value in sed and escape any internal double quotes
+            # We use a different delimiter for sed since the value might contain '|'
+            SAFE_VALUE=$(echo "$VAR_VALUE" | sed 's/"/\\"/g')
+            sed -i "s|^$VAR_NAME=.*|$VAR_NAME=\"$SAFE_VALUE\"|" .env
         else
-            echo "$VAR_NAME=$VAR_VALUE" >> .env
+            echo "$VAR_NAME=\"$VAR_VALUE\"" >> .env
         fi
     fi
 }
