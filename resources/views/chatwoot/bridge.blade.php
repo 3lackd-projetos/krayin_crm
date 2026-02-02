@@ -66,13 +66,31 @@
             border-radius: 4px;
             border: 1px solid #f28b82;
         }
+
+        .refresh-btn {
+            float: right;
+            cursor: pointer;
+            color: #0E90D9;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 2px 5px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #f0f7ff;
+        }
     </style>
 </head>
 
 <body>
     @if(isset($error))
         <div class="card" style="text-align: center;">
-            <div class="header" style="color: #d93025;">Atenção</div>
+            <div class="header" style="color: #d93025;">
+                Atenção
+                <a onclick="window.location.reload();" class="refresh-btn" title="Recarregar">🔄</a>
+            </div>
             <p>{{ $error }}</p>
             <p style="font-size: 11px; color: #666;">Verifique as variavéis de ambiente no App Dashboard do Chatwoot.</p>
             <a href="{{ url('/admin/dashboard') }}" target="_blank" class="btn">Ir para Dashboard do CRM</a>
@@ -81,7 +99,10 @@
         </div>
     @elseif(!$person)
         <div class="card">
-            <div class="header">Krayin CRM</div>
+            <div class="header">
+                Krayin CRM
+                <a onclick="window.location.reload();" class="refresh-btn" title="Recarregar">🔄</a>
+            </div>
             <p>Cliente não encontrado: <strong>{{ $email }}</strong></p>
             <p style="font-size: 11px; color: #666;">Podemos criar este contato com as informações do Chatwoot.</p>
 
@@ -100,7 +121,10 @@
         </div>
     @else
         <div class="card">
-            <div class="header">Dados do Contato</div>
+            <div class="header">
+                Dados do Contato
+                <a onclick="window.location.reload();" class="refresh-btn" title="Recarregar">🔄</a>
+            </div>
             <div class="label">Nome</div>
             <div class="value">{{ $person->name }}</div>
 
