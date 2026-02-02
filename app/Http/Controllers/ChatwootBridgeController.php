@@ -49,13 +49,22 @@ class ChatwootBridgeController extends Controller
 
             $leads = collect();
             if ($person) {
-                $leads = $this->leadRepository->findWhere(['person_id' => $person->id]);
+                // If the CRM user is logged in, use Krayin's internal permissions
+                // Otherwise, show the leads (protected by the Bridge Token)
+                if (auth()->check()) {
+                    $userIds = bouncer()->getAuthorizedUserIds();
+                    $leads = $this->leadRepository->findWhereIn('user_id', $userIds)
+                        ->where('person_id', $person->id);
+                } else {
+                    $leads = $this->leadRepository->findWhere(['person_id' => $person->id]);
+                }
             }
 
             return $this->safeView([
                 'person' => $person,
                 'leads' => $leads,
-                'email' => $email
+                'email' => $email,
+                'current_user' => auth()->user()
             ]);
 
         } catch (\Exception $e) {

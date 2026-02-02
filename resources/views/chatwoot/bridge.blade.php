@@ -76,7 +76,8 @@
         <div class="card">
             <div class="header">Krayin CRM</div>
             <p>Cliente não encontrado: <strong>{{ $email }}</strong></p>
-            <a href="{{ config('app.url') }}/admin/contacts/persons/create?email={{ $email }}" target="_blank" class="btn">+
+            <a href="{{ config('app.url') }}/admin/contacts/persons/create?email={{ $email }}&user_id={{ $current_user->id ?? '' }}"
+                target="_blank" class="btn">+
                 Criar no CRM</a>
         </div>
     @else
