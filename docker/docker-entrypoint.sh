@@ -1,37 +1,43 @@
 #!/bin/sh
 set -e
 
-# Wait for database if needed (simplified for Easypanel)
+echo "--- Krayin CRM Docker Entrypoint ---"
 
-# Ensure APP_KEY is set
+# Ensure APP_KEY is set to avoid session loops
 if [ -z "$APP_KEY" ]; then
-    echo "APP_KEY is not set. Generating one..."
-    # Create a temporary .env if it doesn't exist for key generation
-    if [ ! -f .env ]; then
+    echo "WARNING: APP_KEY is not set in environment variables!"
+    if [ -f .env ] && grep -q "APP_KEY=base64" .env; then
+        echo "Found APP_KEY in .env file."
+    else
+        echo "Generating a temporary APP_KEY..."
+        # We need a dummy .env or it fails
         touch .env
+        php artisan key:generate --show --no-interaction > /tmp/app_key
+        export APP_KEY=$(cat /tmp/app_key | grep -oE "base64:[^ ]+")
+        echo "Generated: $APP_KEY"
+        rm /tmp/app_key
     fi
-    php artisan key:generate --show --no-interaction > /tmp/app_key
-    GENERATED_KEY=$(cat /tmp/app_key | grep -oE "base64:[^ ]+")
-    export APP_KEY=$GENERATED_KEY
-    echo "Generated APP_KEY: $APP_KEY"
-    rm /tmp/app_key
 fi
 
-# Ensure storage permissions are correct (re-apply because of volumes)
+# Ensure storage links exist
+echo "Checking storage links..."
+php artisan storage:link --force || true
+
+# Check if installed - if so, ensure the flag file exists
+echo "Checking database state..."
+# Use php-fpm user context if possible, but here we just ensure the file exists
+php artisan tinker --execute="if (app(\Webkul\Installer\Helpers\DatabaseManager::class)->isInstalled()) { @touch(storage_path('installed')); echo 'INSTALLED_FLAG_CREATED'; }"
+
+# Fix permissions one last time for the web user
+echo "Setting permissions..."
 chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# Clear and cache configurations
+# Clear caches to ensure env changes are picked up
+echo "Clearing caches..."
 php artisan config:clear
 php artisan cache:clear
-php artisan route:clear
-php artisan view:clear
 
-# Create storage links
-php artisan storage:link || true
-
-echo "Starting PHP-FPM..."
+echo "Starting services..."
 php-fpm -D
-
-echo "Starting Nginx..."
 nginx -g 'daemon off;'

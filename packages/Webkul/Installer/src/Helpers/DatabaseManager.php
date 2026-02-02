@@ -32,11 +32,7 @@ class DatabaseManager
 
             $userCount = DB::table('users')->count();
 
-            if (!$userCount) {
-                return false;
-            }
-
-            return true;
+            return (bool) $userCount;
         } catch (Exception $e) {
             \Illuminate\Support\Facades\Log::error('Krayin Install Check Error: ' . $e->getMessage());
             return false;

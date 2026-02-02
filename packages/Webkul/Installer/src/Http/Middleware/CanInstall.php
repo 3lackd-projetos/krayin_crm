@@ -33,11 +33,19 @@ class CanInstall
      */
     public function isAlreadyInstalled(): bool
     {
-        if (file_exists(storage_path('installed')) || file_exists(base_path('storage/installed'))) {
+        if (file_exists(storage_path('installed'))) {
+            \Illuminate\Support\Facades\Log::info('Krayin: Installation file found in storage.');
             return true;
         }
 
+        if (file_exists(base_path('storage/installed'))) {
+            \Illuminate\Support\Facades\Log::info('Krayin: Installation file found in base_path.');
+            return true;
+        }
+
+        \Illuminate\Support\Facades\Log::info('Krayin: Checking database for installation state...');
         if (app(DatabaseManager::class)->isInstalled()) {
+            \Illuminate\Support\Facades\Log::info('Krayin: Database is ready. Attempting to create installation flag.');
             @touch(storage_path('installed'));
             @touch(base_path('storage/installed'));
 
@@ -46,6 +54,7 @@ class CanInstall
             return true;
         }
 
+        \Illuminate\Support\Facades\Log::warning('Krayin: Installation not detected (no file, no DB users).');
         return false;
     }
 }

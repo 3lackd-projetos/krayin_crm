@@ -56,6 +56,7 @@ COPY --from=assets /app/public/build ./public/build
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Configuration
+RUN sed -i 's/;clear_env = no/clear_env = no/g' /usr/local/etc/php-fpm.d/www.conf
 COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
