@@ -122,20 +122,17 @@ class AttributeRepository extends Repository
             return [];
         }
 
-        $labelColumn = $lookupData['label_column'] ?? 'name';
-
-        if (!count($columns)) {
-            $columns = [($lookupData['value_column'] ?? 'id') . ' as id', $labelColumn . ' as name'];
-        }
-
         $repository = app($lookupData['repository']);
+        $table = $repository->getModel()->getTable();
+        $labelColumn = $lookupData['label_column'] ?? 'name';
+        $valueColumn = $lookupData['value_column'] ?? 'id';
 
         $query = urldecode($query);
 
-        $queryBuilder = $repository->getModel()->newQuery();
+        $dbQuery = \Illuminate\Support\Facades\DB::table($table);
 
         if ($query) {
-            $queryBuilder->where($labelColumn, 'like', '%' . $query . '%');
+            $dbQuery->where($labelColumn, 'like', '%' . $query . '%');
         }
 
         $userIds = bouncer()->getAuthorizedUserIds();
@@ -144,7 +141,7 @@ class AttributeRepository extends Repository
             $column = Str::contains($lookupData['repository'], 'UserRepository') ? 'id' : 'user_id';
 
             if (in_array($lookup, ['persons', 'organizations', 'leads', 'users'])) {
-                $queryBuilder->where(function ($q) use ($column, $userIds) {
+                $dbQuery->where(function ($q) use ($column, $userIds) {
                     $q->whereIn($column, $userIds)
                         ->orWhereNull($column);
                 });
@@ -152,10 +149,15 @@ class AttributeRepository extends Repository
         }
 
         if ($lookup === 'users') {
-            $queryBuilder->where('status', 1);
+            $dbQuery->where('status', 1);
         }
 
-        return $queryBuilder->limit(20)->get($columns);
+        $results = $dbQuery->limit(20)->get([
+            $valueColumn . ' as id',
+            $labelColumn . ' as name'
+        ]);
+
+        return $results->toArray();
     }
 
     /**
