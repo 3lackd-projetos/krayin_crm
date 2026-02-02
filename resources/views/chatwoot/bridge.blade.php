@@ -71,14 +71,30 @@
 
 <body>
     @if(isset($error))
-        <div class="error">{{ $error }}</div>
+        <div class="card" style="text-align: center;">
+            <div class="header" style="color: #d93025;">Atenção</div>
+            <p>{{ $error }}</p>
+            <p style="font-size: 11px; color: #666;">Verifique as chaves {{ }} no App Dashboard do Chatwoot.</p>
+            <a href="{{ config('app.url') }}/admin/dashboard" target="_blank" class="btn">Ir para Dashboard do CRM</a>
+            <a href="{{ config('app.url') }}/admin/contacts/persons" target="_blank" class="btn" style="background: #666;">Ver Contatos</a>
+        </div>
     @elseif(!$person)
         <div class="card">
             <div class="header">Krayin CRM</div>
             <p>Cliente não encontrado: <strong>{{ $email }}</strong></p>
-            <a href="{{ config('app.url') }}/admin/contacts/persons/create?email={{ $email }}&user_id={{ $current_user->id ?? '' }}"
-                target="_blank" class="btn">+
-                Criar no CRM</a>
+            <p style="font-size: 11px; color: #666;">Podemos criar este contato com as informações do Chatwoot.</p>
+            
+            @php
+                $createUrl = config('app.url') . "/admin/contacts/persons/create?" . http_build_query([
+                    'email' => $email,
+                    'name' => $name ?? '',
+                    'contact_numbers[0][value]' => $phone ?? '',
+                    'user_id' => $current_user->id ?? ''
+                ]);
+            @endphp
+
+            <a href="{{ $createUrl }}" target="_blank" class="btn">+ Criar no CRM</a>
+            <a href="{{ config('app.url') }}/admin/contacts/persons" target="_blank" class="btn" style="background: #666; margin-left: 5px;">Busca Manual</a>
         </div>
     @else
         <div class="card">

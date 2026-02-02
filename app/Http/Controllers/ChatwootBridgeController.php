@@ -35,10 +35,16 @@ class ChatwootBridgeController extends Controller
             }
 
             $email = $request->query('email');
+            $name = $request->query('name');
+            $phone = $request->query('phone');
+            $jobTitle = $request->query('job_title');
 
             // Check if variable substitution failed in Chatwoot
             if (!$email || $email === '{{contact.email}}' || $email === '{{ email }}') {
-                return $this->safeView(['error' => 'E-mail não detectado pelo Chatwoot. Verifique as chaves {{ }} no App Dashboard.'], 400);
+                return $this->safeView([
+                    'error' => 'E-mail não detectado pelo Chatwoot.',
+                    'show_dashboard_link' => true
+                ], 200);
             }
 
             // Krayin stores emails in a JSON column 'emails'. 
@@ -64,6 +70,9 @@ class ChatwootBridgeController extends Controller
                 'person' => $person,
                 'leads' => $leads,
                 'email' => $email,
+                'name' => $name,
+                'phone' => $phone,
+                'job_title' => $jobTitle,
                 'current_user' => auth()->user()
             ]);
 
