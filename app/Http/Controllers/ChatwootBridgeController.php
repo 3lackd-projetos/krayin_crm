@@ -9,11 +9,14 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Collection;
 
+use Webkul\User\Repositories\UserRepository;
+
 class ChatwootBridgeController extends Controller
 {
     public function __construct(
         protected PersonRepository $personRepository,
-        protected LeadRepository $leadRepository
+        protected LeadRepository $leadRepository,
+        protected UserRepository $userRepository
     ) {
     }
 
@@ -24,9 +27,11 @@ class ChatwootBridgeController extends Controller
         try {
             $token = $request->query('token');
             $secret = env('CHATWOOT_BRIDGE_SECRET');
+            $agentEmail = $request->query('agent_email');
 
             Log::info('Chatwoot Bridge Access', [
                 'email' => $request->query('email'),
+                'agent' => $agentEmail,
                 'token_match' => ($token === $secret)
             ]);
 
@@ -47,21 +52,37 @@ class ChatwootBridgeController extends Controller
                 ], 200);
             }
 
+            // identify CRM User for ACL
+            $crmUser = null;
+            if ($agentEmail) {
+                $crmUser = $this->userRepository->findOneByField('email', $agentEmail);
+            }
+
             // Krayin stores emails in a JSON column 'emails'. 
-            // format: [{"value": "email@example.com", "label": "work"}]
             $person = $this->personRepository->scopeQuery(function ($query) use ($email) {
                 return $query->whereJsonContains('emails', ['value' => $email]);
             })->first();
 
             $leads = collect();
             if ($person) {
-                // If the CRM user is logged in, use Krayin's internal permissions
-                // Otherwise, show the leads (protected by the Bridge Token)
-                if (auth()->check()) {
-                    $userIds = bouncer()->getAuthorizedUserIds();
-                    $leads = $this->leadRepository->findWhereIn('user_id', $userIds)
-                        ->where('person_id', $person->id);
+                // Determine user context: Priority to active session, fallback to mapped agent email
+                $currentUser = auth()->user() ?? $crmUser;
+
+                if ($currentUser) {
+                    // Logic to load leads according to user permissions
+                    // We can either filter by own leads or use Krayin's permission logic
+                    $leads = $this->leadRepository->findWhere([
+                        'user_id' => $currentUser->id,
+                        'person_id' => $person->id
+                    ]);
+
+                    // Fallback: If no leads found for specific user but person exists, 
+                    // check if user has permission to see all leads.
+                    if ($leads->isEmpty() && $currentUser->role->permission_type === 'all') {
+                        $leads = $this->leadRepository->findWhere(['person_id' => $person->id]);
+                    }
                 } else {
+                    // No user identified, show all associated leads (Bridge token is the security layer)
                     $leads = $this->leadRepository->findWhere(['person_id' => $person->id]);
                 }
             }
@@ -73,6 +94,7 @@ class ChatwootBridgeController extends Controller
                 'name' => $name,
                 'phone' => $phone,
                 'job_title' => $jobTitle,
+                'agent' => $crmUser,
                 'current_user' => auth()->user()
             ]);
 

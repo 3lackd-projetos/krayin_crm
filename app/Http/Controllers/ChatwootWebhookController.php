@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Webkul\Contact\Repositories\PersonRepository;
+use Webkul\Contact\Repositories\OrganizationRepository;
 use Webkul\Lead\Repositories\LeadRepository;
 use Webkul\Attribute\Repositories\AttributeValueRepository;
 
@@ -12,7 +13,8 @@ class ChatwootWebhookController extends Controller
 {
     public function __construct(
         protected PersonRepository $personRepository,
-        protected LeadRepository $leadRepository
+        protected LeadRepository $leadRepository,
+        protected OrganizationRepository $organizationRepository
     ) {
     }
 
@@ -56,11 +58,11 @@ class ChatwootWebhookController extends Controller
         } elseif (isset($payload['contact'])) {
             $contact = $payload['contact'];
         } elseif (isset($payload['data']) && is_array($payload['data'])) {
-            $contact = $payload['data']; // contact_updated often puts data in 'data'
+            $contact = $payload['data'];
         } elseif (isset($payload['meta']['sender'])) {
-            $contact = $payload['meta']['sender']; // conversation_created
+            $contact = $payload['meta']['sender'];
         } elseif (isset($payload['email'])) {
-            $contact = $payload; // payload itself IS the contact
+            $contact = $payload;
         }
 
         if (!$contact || empty($contact['email'])) {
@@ -74,8 +76,24 @@ class ChatwootWebhookController extends Controller
         $email = $contact['email'];
         $name = $contact['name'] ?? 'Chatwoot User';
         $phone = $contact['phone_number'] ?? ($contact['phone'] ?? '');
+        $companyName = $contact['company_name'] ?? ($contact['additional_attributes']['company_name'] ?? null);
 
-        // 2. Find or Create Person (using JSON aware search)
+        // 2. Manage Organization
+        $organizationId = null;
+        if ($companyName) {
+            $organization = $this->organizationRepository->findOneByField('name', $companyName);
+            if (!$organization) {
+                $organization = $this->organizationRepository->create([
+                    'name' => $companyName,
+                    'entity_type' => 'organizations',
+                    'user_id' => 1,
+                ]);
+                Log::info('Chatwoot Webhook: Created Organization ' . $companyName);
+            }
+            $organizationId = $organization->id;
+        }
+
+        // 3. Find or Create Person (using JSON aware search)
         $person = $this->personRepository->scopeQuery(function ($query) use ($email) {
             return $query->whereJsonContains('emails', ['value' => $email]);
         })->first();
@@ -84,6 +102,7 @@ class ChatwootWebhookController extends Controller
             'name' => $name,
             'emails' => [['value' => $email, 'label' => 'work']],
             'entity_type' => 'persons',
+            'organization_id' => $organizationId,
         ];
 
         if ($phone) {
@@ -100,18 +119,18 @@ class ChatwootWebhookController extends Controller
             Log::info('Chatwoot Webhook: Updated Person ' . $email);
         }
 
-        // 3. Extract IDs for Reverse Sync
+        // 4. Extract IDs for Reverse Sync
         $conversationId = $payload['conversation']['id'] ?? ($payload['id'] ?? null);
         $accountId = $payload['account']['id'] ?? ($payload['account_id'] ?? null);
 
-        // 4. Manage Lead
+        // 5. Manage Lead
         $existingLead = $this->leadRepository->findOneWhere([
             'person_id' => $person->id,
             'lead_pipeline_stage_id' => 1,
         ]);
 
         $leadData = [
-            'entity_type' => 'leads', // Crucial for Krayin's AttributeValueRepository
+            'entity_type' => 'leads',
             'title' => 'Lead Chatwoot - ' . $name,
             'user_id' => $person->user_id ?? 1,
             'person_id' => $person->id,
@@ -122,6 +141,16 @@ class ChatwootWebhookController extends Controller
             'chatwoot_conversation_id' => $conversationId,
             'chatwoot_account_id' => $accountId,
         ];
+
+        if (!$existingLead) {
+            $leadData['description'] = 'Lead criado automaticamente via Chatwoot Webhook.';
+            $this->leadRepository->create($leadData);
+            Log::info('Chatwoot Webhook: Created Lead for ' . $email);
+        } else {
+            // Update conversation mapping on existing lead
+            $this->leadRepository->update($leadData, $existingLead->id);
+            Log::info('Chatwoot Webhook: Updated Mapping for Lead ' . $existingLead->id);
+        }
 
         if (!$existingLead) {
             $leadData['description'] = 'Lead criado automaticamente via Chatwoot Webhook.';

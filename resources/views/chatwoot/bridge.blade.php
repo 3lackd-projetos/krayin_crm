@@ -110,6 +110,11 @@
                 <div class="value">{{ $person->contact_numbers[0]['value'] }}</div>
             @endif
 
+            @if($person->organization)
+                <div class="label">Empresa</div>
+                <div class="value">{{ $person->organization->name }}</div>
+            @endif
+
             <a href="{{ config('app.url') }}/admin/contacts/persons/view/{{ $person->id }}" target="_blank"
                 class="btn">Abrir Perfil Completo</a>
         </div>
@@ -134,8 +139,15 @@
             <div class="card">
                 <div class="header">Leads</div>
                 <p>Nenhum lead encontrado para este contato.</p>
-                <a href="{{ config('app.url') }}/admin/leads/create?person_id={{ $person->id }}" target="_blank" class="btn">+
+                <a href="{{ config('app.url') }}/admin/leads/create?person_id={{ $person->id }}&user_id={{ $agent->id ?? '' }}" target="_blank" class="btn">+
                     Novo Lead</a>
+            </div>
+        @endif
+
+        @if(isset($agent))
+            <div style="font-size: 10px; color: #999; text-align: center; margin-top: 10px;">
+                Identificado como: <strong>{{ $agent->name }}</strong><br>
+                Caminho ACL: {{ $agent->role->name ?? 'Padrão' }}
             </div>
         @endif
     @endif
