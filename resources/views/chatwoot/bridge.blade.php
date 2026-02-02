@@ -74,10 +74,10 @@
         <div class="card" style="text-align: center;">
             <div class="header" style="color: #d93025;">Atenção</div>
             <p>{{ $error }}</p>
-            <p style="font-size: 11px; color: #666;">Verifique as chaves @{{ }} no App Dashboard do Chatwoot.</p>
-            <a href="{{ config('app.url') }}/admin/dashboard" target="_blank" class="btn">Ir para Dashboard do CRM</a>
-            <a href="{{ config('app.url') }}/admin/contacts/persons" target="_blank" class="btn"
-                style="background: #666;">Ver Contatos</a>
+            <p style="font-size: 11px; color: #666;">Verifique as variavéis de ambiente no App Dashboard do Chatwoot.</p>
+            <a href="{{ url('/admin/dashboard') }}" target="_blank" class="btn">Ir para Dashboard do CRM</a>
+            <a href="{{ url('/admin/contacts/persons') }}" target="_blank" class="btn" style="background: #666;">Ver
+                Contatos</a>
         </div>
     @elseif(!$person)
         <div class="card">
@@ -86,7 +86,7 @@
             <p style="font-size: 11px; color: #666;">Podemos criar este contato com as informações do Chatwoot.</p>
 
             @php
-                $createUrl = config('app.url') . "/admin/contacts/persons/create?" . http_build_query([
+                $createUrl = url('/admin/contacts/persons/create') . "?" . http_build_query([
                     'email' => $email,
                     'name' => $name ?? '',
                     'contact_numbers[0][value]' => $phone ?? '',
@@ -95,7 +95,7 @@
             @endphp
 
             <a href="{{ $createUrl }}" target="_blank" class="btn">+ Criar no CRM</a>
-            <a href="{{ config('app.url') }}/admin/contacts/persons" target="_blank" class="btn"
+            <a href="{{ url('/admin/contacts/persons') }}" target="_blank" class="btn"
                 style="background: #666; margin-left: 5px;">Busca Manual</a>
         </div>
     @else
@@ -117,8 +117,8 @@
                 <div class="value">{{ $person->organization->name }}</div>
             @endif
 
-            <a href="{{ config('app.url') }}/admin/contacts/persons/view/{{ $person->id }}" target="_blank"
-                class="btn">Abrir Perfil Completo</a>
+            <a href="{{ url('/admin/contacts/persons/view/' . $person->id) }}" target="_blank" class="btn">Abrir Perfil
+                Completo</a>
         </div>
 
         @if(count($leads) > 0)
@@ -141,7 +141,7 @@
             <div class="card">
                 <div class="header">Leads</div>
                 <p>Nenhum lead encontrado para este contato.</p>
-                <a href="{{ config('app.url') }}/admin/leads/create?person_id={{ $person->id }}&user_id={{ $agent->id ?? '' }}"
+                <a href="{{ url('/admin/leads/create') }}?person_id={{ $person->id }}&user_id={{ $agent->id ?? '' }}"
                     target="_blank" class="btn">+
                     Novo Lead</a>
             </div>
