@@ -70,27 +70,37 @@ class ChatwootWebhookController extends Controller
             Log::info('Chatwoot Webhook: Created new Person - ' . $email);
         }
 
-        // 2. Check for active leads to avoid duplicates
+        // 2. Extract Chatwoot IDs
+        $conversationId = $payload['conversation']['id'] ?? null;
+        $accountId = $payload['account']['id'] ?? null;
+
+        // 3. Check for active leads to avoid duplicates or update details
         $existingLead = $this->leadRepository->findOneWhere([
             'person_id' => $person->id,
-            'lead_pipeline_stage_id' => 1, // Tentatively check first stage
+            'lead_pipeline_stage_id' => 1,
         ]);
 
-        if (!$existingLead) {
-            $leadData = [
-                'title' => 'Novo Lead do Chatwoot - ' . $name,
-                'description' => 'Lead criado automaticamente via integração direta com Chatwoot.',
-                'lead_value' => 0,
-                'user_id' => 1, // Default to admin
-                'person_id' => $person->id,
-                'lead_source_id' => 1, // Assume first source is suitable
-                'lead_type_id' => 1,
-                'lead_pipeline_id' => 1,
-                'lead_pipeline_stage_id' => 1,
-            ];
+        $leadData = [
+            'title' => 'Novo Lead do Chatwoot - ' . $name,
+            'description' => 'Lead criado automaticamente via integração direta com Chatwoot.',
+            'lead_value' => 0,
+            'user_id' => 1, // Default to admin
+            'person_id' => $person->id,
+            'lead_source_id' => 1,
+            'lead_type_id' => 1,
+            'lead_pipeline_id' => 1,
+            'lead_pipeline_stage_id' => 1,
+            'chatwoot_conversation_id' => $conversationId,
+            'chatwoot_account_id' => $accountId,
+        ];
 
+        if (!$existingLead) {
             $this->leadRepository->create($leadData);
-            Log::info('Chatwoot Webhook: Created new Lead for ' . $email);
+            Log::info('Chatwoot Webhook: Created new Lead for ' . $email . ' (Conv: ' . $conversationId . ')');
+        } else {
+            // Update existing lead with IDs if missing
+            $this->leadRepository->update($leadData, $existingLead->id);
+            Log::info('Chatwoot Webhook: Updated IDs for Lead ' . $existingLead->id);
         }
 
         return response()->json(['status' => 'success']);
