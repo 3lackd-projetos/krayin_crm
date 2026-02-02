@@ -31,37 +31,58 @@ class ChatwootBridgeController extends Controller
             ]);
 
             if (!$secret || $token !== $secret) {
-                return response()->view('chatwoot.bridge', ['error' => 'Acesso negado: Token inválido.'], 403);
+                return $this->safeView(['error' => 'Acesso negado: Token inválido.'], 403);
             }
 
             $email = $request->query('email');
-            if (!$email) {
-                return response()->view('chatwoot.bridge', ['error' => 'E-mail não fornecido.'], 400);
+
+            // Check if variable substitution failed in Chatwoot
+            if (!$email || $email === '{{contact.email}}' || $email === '{{ email }}') {
+                return $this->safeView(['error' => 'E-mail não detectado pelo Chatwoot. Verifique as chaves {{ }} no App Dashboard.'], 400);
             }
 
-            $person = $this->personRepository->findOneByField('email', $email);
+            // Krayin stores emails in a JSON column 'emails'. 
+            // format: [{"value": "email@example.com", "label": "work"}]
+            $person = $this->personRepository->scopeQuery(function ($query) use ($email) {
+                return $query->whereJsonContains('emails', ['value' => $email]);
+            })->first();
 
             $leads = collect();
             if ($person) {
-                // Simplified lead fetch
                 $leads = $this->leadRepository->findWhere(['person_id' => $person->id]);
             }
 
-            return view('chatwoot.bridge', [
+            return $this->safeView([
                 'person' => $person,
                 'leads' => $leads,
                 'email' => $email
             ]);
+
         } catch (\Exception $e) {
             Log::error('Chatwoot Bridge CRASH: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
 
-            // Return 200 but with error content for debugging
-            return response()->view('chatwoot.bridge', [
-                'error' => 'ERRO CRÍTICO: ' . $e->getMessage() . ' em ' . $e->getFile() . ':' . $e->getLine()
+            return $this->safeView([
+                'error' => 'ERRO CRÍTICO: ' . $e->getMessage()
             ], 200);
         }
+    }
+
+    /**
+     * Safety wrapper for view to avoid 500 if view file is missing from Git
+     */
+    private function safeView($data, $status = 200)
+    {
+        if (view()->exists('chatwoot.bridge')) {
+            return response()->view('chatwoot.bridge', $data, $status);
+        }
+
+        return response()->json([
+            'status' => 'error_missing_view',
+            'message' => 'O arquivo da view chatwoot.bridge não foi encontrado no servidor. Verifique se deu "git add" no arquivo.',
+            'debug_data' => $data
+        ], $status);
     }
 }
