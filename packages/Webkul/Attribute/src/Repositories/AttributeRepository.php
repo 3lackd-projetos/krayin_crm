@@ -119,6 +119,8 @@ class AttributeRepository extends Repository
      */
     public function getLookUpOptions($lookup, $query = '', $columns = [])
     {
+        Log::info("Debug: getLookUpOptions called", ['lookup' => $lookup, 'query' => $query]);
+
         $lookupData = config('attribute_lookups.' . $lookup);
 
         if (!$lookupData) {
@@ -183,24 +185,36 @@ class AttributeRepository extends Repository
      */
     public function getLookUpEntity($lookup, $entityId = null, $columns = [])
     {
+        Log::info("Debug: getLookUpEntity called", ['lookup' => $lookup, 'entityId' => $entityId]);
+
         if (!$entityId) {
             return;
         }
 
-        $lookup = config('attribute_lookups.' . $lookup);
+        $lookupData = config('attribute_lookups.' . $lookup);
 
-        if (!count($columns)) {
-            $columns = [($lookup['value_column'] ?? 'id') . ' as id', ($lookup['label_column'] ?? 'name') . ' as name'];
+        if (!$lookupData) {
+            Log::warning("Lookup data configuration not found for key: $lookup");
+            return;
         }
 
-        if (is_array($entityId)) {
-            return app($lookup['repository'])->findWhereIn(
-                'id',
-                $entityId,
-                $columns
-            );
-        } else {
-            return app($lookup['repository'])->find($entityId, $columns);
+        if (!count($columns)) {
+            $columns = [($lookupData['value_column'] ?? 'id') . ' as id', ($lookupData['label_column'] ?? 'name') . ' as name'];
+        }
+
+        try {
+            if (is_array($entityId)) {
+                return app($lookupData['repository'])->findWhereIn(
+                    'id',
+                    $entityId,
+                    $columns
+                );
+            } else {
+                return app($lookupData['repository'])->find($entityId, $columns);
+            }
+        } catch (\Exception $e) {
+            Log::error("Lookup Entity Fetch Failed", ['lookup' => $lookup, 'id' => $entityId, 'error' => $e->getMessage()]);
+            return null;
         }
     }
 }

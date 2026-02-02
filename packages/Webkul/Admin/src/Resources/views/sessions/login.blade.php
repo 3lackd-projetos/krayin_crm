@@ -41,7 +41,9 @@
 
             <!-- Right Side: Login Form -->
             <div
-                style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; background: #f9fafb;">
+                style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; background: #f9fafb; position: relative;">
+                <!-- VERSION MARKER: 2.2 -->
+                <div style="position: absolute; top: 10px; right: 10px; font-size: 10px; color: #ccc;">v2.2</div>
                 <div style="width: 100%; max-width: 420px;">
 
                     <!-- Mobile Logo Header -->
