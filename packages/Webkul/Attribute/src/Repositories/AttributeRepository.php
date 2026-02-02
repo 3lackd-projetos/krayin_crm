@@ -127,11 +127,11 @@ class AttributeRepository extends Repository
         $labelColumn = $lookupData['label_column'] ?? 'name';
         $valueColumn = $lookupData['value_column'] ?? 'id';
 
-        $query = urldecode($query);
+        $query = urldecode((string) $query);
 
         $dbQuery = \Illuminate\Support\Facades\DB::table($table);
 
-        if ($query) {
+        if ($query !== '') {
             $dbQuery->where($labelColumn, 'like', '%' . $query . '%');
         }
 
@@ -143,7 +143,8 @@ class AttributeRepository extends Repository
             if (in_array($lookup, ['persons', 'organizations', 'leads', 'users'])) {
                 $dbQuery->where(function ($q) use ($column, $userIds) {
                     $q->whereIn($column, $userIds)
-                        ->orWhereNull($column);
+                        ->orWhereNull($column)
+                        ->orWhere($column, 0);
                 });
             }
         }
