@@ -45,7 +45,7 @@ class AttributeRepository extends Repository
             foreach ($options as $optionInputs) {
                 $this->attributeOptionRepository->create(array_merge([
                     'attribute_id' => $attribute->id,
-                    'sort_order'   => $sortOrder++,
+                    'sort_order' => $sortOrder++,
                 ], $optionInputs));
             }
         }
@@ -64,11 +64,11 @@ class AttributeRepository extends Repository
 
         $attribute->update($data);
 
-        if (! in_array($attribute->type, ['select', 'multiselect', 'checkbox'])) {
+        if (!in_array($attribute->type, ['select', 'multiselect', 'checkbox'])) {
             return $attribute;
         }
 
-        if (! isset($data['options'])) {
+        if (!isset($data['options'])) {
             return $attribute;
         }
 
@@ -116,35 +116,28 @@ class AttributeRepository extends Repository
      */
     public function getLookUpOptions($lookup, $query = '', $columns = [])
     {
-        $lookup = config('attribute_lookups.'.$lookup);
+        $lookupData = config('attribute_lookups.' . $lookup);
 
-        if (! count($columns)) {
-            $columns = [($lookup['value_column'] ?? 'id').' as id', ($lookup['label_column'] ?? 'name').' as name'];
+        if (!count($columns)) {
+            $columns = [($lookupData['value_column'] ?? 'id') . ' as id', ($lookupData['label_column'] ?? 'name') . ' as name'];
         }
 
-        if (Str::contains($lookup['repository'], 'UserRepository')) {
-            $userRepository = app($lookup['repository'])->where('status', 1);
+        $repository = app($lookupData['repository']);
 
-            $currentUser = auth()->guard('user')->user();
+        $query = urldecode($query);
 
-            if ($currentUser?->view_permission === 'group') {
-                $query = urldecode($query);
+        if ($userIds = bouncer()->getAuthorizedUserIds()) {
+            $repository->scopeQuery(function ($queryBuilder) use ($userIds, $lookupData) {
+                $table = $queryBuilder->getModel()->getTable();
 
-                $userIds = bouncer()->getAuthorizedUserIds();
+                $column = $lookupData['repository'] == 'Webkul\User\Repositories\UserRepository' ? 'id' : 'user_id';
 
-                return $userRepository
-                    ->when(! empty($userIds), fn ($queryBuilder) => $queryBuilder->whereIn('users.id', $userIds))
-                    ->when(! empty($query), fn ($queryBuilder) => $queryBuilder->where('users.name', 'like', "%{$query}%"))
-                    ->get();
-            } elseif ($currentUser?->view_permission === 'individual') {
-                return $userRepository->where('users.id', $currentUser->id)->get();
-            }
-
-            return $userRepository->where('users.name', 'like', '%'.urldecode($query).'%')->get();
+                return $queryBuilder->whereIn($table . '.' . $column, $userIds);
+            });
         }
 
-        return app($lookup['repository'])->findWhere([
-            [$lookup['label_column'] ?? 'name', 'like', '%'.urldecode($query).'%'],
+        return $repository->findWhere([
+            [$lookupData['label_column'] ?? 'name', 'like', '%' . $query . '%'],
         ], $columns);
     }
 
@@ -156,14 +149,14 @@ class AttributeRepository extends Repository
      */
     public function getLookUpEntity($lookup, $entityId = null, $columns = [])
     {
-        if (! $entityId) {
+        if (!$entityId) {
             return;
         }
 
-        $lookup = config('attribute_lookups.'.$lookup);
+        $lookup = config('attribute_lookups.' . $lookup);
 
-        if (! count($columns)) {
-            $columns = [($lookup['value_column'] ?? 'id').' as id', ($lookup['label_column'] ?? 'name').' as name'];
+        if (!count($columns)) {
+            $columns = [($lookup['value_column'] ?? 'id') . ' as id', ($lookup['label_column'] ?? 'name') . ' as name'];
         }
 
         if (is_array($entityId)) {

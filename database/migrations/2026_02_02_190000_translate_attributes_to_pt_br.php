@@ -9,43 +9,56 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        // Quotes Attributes
-        DB::table('attributes')->where(['entity_type' => 'quotes', 'code' => 'subject'])->update(['name' => 'Assunto']);
-        DB::table('attributes')->where(['entity_type' => 'quotes', 'code' => 'description'])->update(['name' => 'Descrição']);
-        DB::table('attributes')->where(['entity_type' => 'quotes', 'code' => 'user_id'])->update(['name' => 'Responsável']);
-        DB::table('attributes')->where(['entity_type' => 'quotes', 'code' => 'expired_at'])->update(['name' => 'Expira em']);
-        DB::table('attributes')->where(['entity_type' => 'quotes', 'code' => 'person_id'])->update(['name' => 'Pessoa']);
-        DB::table('attributes')->where(['entity_type' => 'quotes', 'code' => 'billing_address'])->update(['name' => 'Endereço de Cobrança']);
-        DB::table('attributes')->where(['entity_type' => 'quotes', 'code' => 'shipping_address'])->update(['name' => 'Endereço de Entrega']);
+        $translations = [
+            // Quotes
+            ['code' => 'subject', 'entity_type' => 'quotes', 'name' => 'Assunto'],
+            ['code' => 'description', 'entity_type' => 'quotes', 'name' => 'Descrição'],
+            ['code' => 'user_id', 'entity_type' => 'quotes', 'name' => 'Responsável'],
+            ['code' => 'expired_at', 'entity_type' => 'quotes', 'name' => 'Expira em'],
+            ['code' => 'person_id', 'entity_type' => 'quotes', 'name' => 'Pessoa'],
+            ['code' => 'billing_address', 'entity_type' => 'quotes', 'name' => 'Endereço de Faturamento'],
+            ['code' => 'shipping_address', 'entity_type' => 'quotes', 'name' => 'Endereço de Entrega'],
+            ['code' => 'discount_amount', 'entity_type' => 'quotes', 'name' => 'Desconto'],
+            ['code' => 'tax_amount', 'entity_type' => 'quotes', 'name' => 'Imposto'],
+            ['code' => 'adjustment_amount', 'entity_type' => 'quotes', 'name' => 'Ajuste'],
+            ['code' => 'sub_total', 'entity_type' => 'quotes', 'name' => 'Sub Total'],
+            ['code' => 'grand_total', 'entity_type' => 'quotes', 'name' => 'Total Geral'],
 
-        // Leads Attributes
-        DB::table('attributes')->where(['entity_type' => 'leads', 'code' => 'title'])->update(['name' => 'Título']);
-        DB::table('attributes')->where(['entity_type' => 'leads', 'code' => 'description'])->update(['name' => 'Descrição']);
-        DB::table('attributes')->where(['entity_type' => 'leads', 'code' => 'lead_value'])->update(['name' => 'Valor da Oportunidade']);
-        DB::table('attributes')->where(['entity_type' => 'leads', 'code' => 'expected_close_date'])->update(['name' => 'Fechamento Esperado']);
-        DB::table('attributes')->where(['entity_type' => 'leads', 'code' => 'user_id'])->update(['name' => 'Responsável']);
-        DB::table('attributes')->where(['entity_type' => 'leads', 'code' => 'lead_source_id'])->update(['name' => 'Origem']);
-        DB::table('attributes')->where(['entity_type' => 'leads', 'code' => 'lead_type_id'])->update(['name' => 'Tipo']);
-        DB::table('attributes')->where(['entity_type' => 'leads', 'code' => 'lead_pipeline_id'])->update(['name' => 'Funil']);
-        DB::table('attributes')->where(['entity_type' => 'leads', 'code' => 'lead_pipeline_stage_id'])->update(['name' => 'Estágio']);
+            // Leads
+            ['code' => 'title', 'entity_type' => 'leads', 'name' => 'Título'],
+            ['code' => 'description', 'entity_type' => 'leads', 'name' => 'Descrição'],
+            ['code' => 'lead_value', 'entity_type' => 'leads', 'name' => 'Valor do Lead'],
+            ['code' => 'user_id', 'entity_type' => 'leads', 'name' => 'Responsável'],
+            ['code' => 'person_id', 'entity_type' => 'leads', 'name' => 'Pessoa'],
+            ['code' => 'lead_source_id', 'entity_type' => 'leads', 'name' => 'Fonte'],
+            ['code' => 'lead_type_id', 'entity_type' => 'leads', 'name' => 'Tipo'],
+            ['code' => 'closed_at', 'entity_type' => 'leads', 'name' => 'Fechado em'],
+            ['code' => 'expected_close_date', 'entity_type' => 'leads', 'name' => 'Fechamento Esperado'],
 
-        // Persons Attributes
-        DB::table('attributes')->where(['entity_type' => 'persons', 'code' => 'name'])->update(['name' => 'Nome']);
-        DB::table('attributes')->where(['entity_type' => 'persons', 'code' => 'emails'])->update(['name' => 'E-mail']);
-        DB::table('attributes')->where(['entity_type' => 'persons', 'code' => 'contact_numbers'])->update(['name' => 'Telefone']);
-        DB::table('attributes')->where(['entity_type' => 'persons', 'code' => 'organization_id'])->update(['name' => 'Empresa']);
-        DB::table('attributes')->where(['entity_type' => 'persons', 'code' => 'user_id'])->update(['name' => 'Responsável']);
+            // Persons
+            ['code' => 'name', 'entity_type' => 'persons', 'name' => 'Nome'],
+            ['code' => 'emails', 'entity_type' => 'persons', 'name' => 'E-mails'],
+            ['code' => 'contact_numbers', 'entity_type' => 'persons', 'name' => 'Telefones'],
+            ['code' => 'job_title', 'entity_type' => 'persons', 'name' => 'Cargo'],
+            ['code' => 'organization_id', 'entity_type' => 'persons', 'name' => 'Organização'],
 
-        // Organizations Attributes
-        DB::table('attributes')->where(['entity_type' => 'organizations', 'code' => 'name'])->update(['name' => 'Nome']);
-        DB::table('attributes')->where(['entity_type' => 'organizations', 'code' => 'address'])->update(['name' => 'Endereço']);
-        DB::table('attributes')->where(['entity_type' => 'organizations', 'code' => 'user_id'])->update(['name' => 'Responsável']);
+            // Organizations
+            ['code' => 'name', 'entity_type' => 'organizations', 'name' => 'Nome'],
+            ['code' => 'address', 'entity_type' => 'organizations', 'name' => 'Endereço'],
 
-        // Products Attributes
-        DB::table('attributes')->where(['entity_type' => 'products', 'code' => 'name'])->update(['name' => 'Nome']);
-        DB::table('attributes')->where(['entity_type' => 'products', 'code' => 'price'])->update(['name' => 'Preço']);
-        DB::table('attributes')->where(['entity_type' => 'products', 'code' => 'quantity'])->update(['name' => 'Quantidade']);
-        DB::table('attributes')->where(['entity_type' => 'products', 'code' => 'sku'])->update(['name' => 'Código']);
+            // Products
+            ['code' => 'name', 'entity_type' => 'products', 'name' => 'Nome'],
+            ['code' => 'sku', 'entity_type' => 'products', 'name' => 'SKU'],
+            ['code' => 'description', 'entity_type' => 'products', 'name' => 'Descrição'],
+            ['code' => 'price', 'entity_type' => 'products', 'name' => 'Preço'],
+        ];
+
+        foreach ($translations as $translation) {
+            DB::table('attributes')
+                ->where('code', $translation['code'])
+                ->where('entity_type', $translation['entity_type'])
+                ->update(['name' => $translation['name']]);
+        }
     }
 
     /**
@@ -53,6 +66,5 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        // No rollback needed as this is a one-way translation fix for a specific installation
     }
 };

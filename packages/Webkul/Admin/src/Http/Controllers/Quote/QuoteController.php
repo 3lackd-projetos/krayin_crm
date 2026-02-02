@@ -52,7 +52,7 @@ class QuoteController extends Controller
      */
     public function create(): View
     {
-        $lead = $this->leadRepository->find(request('id'));
+        $lead = $this->leadRepository->find(request('id') ?: request('lead_id'));
 
         return view('admin::quotes.create', compact('lead'));
     }
@@ -192,7 +192,7 @@ class QuoteController extends Controller
 
         return $this->downloadPDF(
             view('admin::quotes.pdf', compact('quote'))->render(),
-            'Quote_'.$quote->subject.'_'.$quote->created_at->format('d-m-Y')
+            'Quote_' . $quote->subject . '_' . $quote->created_at->format('d-m-Y')
         );
     }
 }

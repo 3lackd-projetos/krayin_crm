@@ -185,7 +185,7 @@
                                     </x-admin::form.control-group.label>
 
                                     <v-lookup-component
-                                        :attribute="{'code': 'lead_id', 'name': 'Lead', 'lookup_type': 'leads'}"
+                                        :attribute="{'code': 'lead_id', 'name': '@lang('admin::app.quotes.create.link-to-lead')', 'lookup_type': 'leads'}"
                                         :value='@json($lookUpEntityData)'
                                         can-add-new="true"
                                     ></v-lookup-component>
