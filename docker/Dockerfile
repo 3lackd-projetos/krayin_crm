@@ -41,6 +41,10 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     intl \
     soap \
     calendar \
+    xml \
+    dom \
+    fileinfo \
+    ctype \
     opcache
 
 # Get composer
