@@ -10,19 +10,28 @@ if [ -z "$APP_KEY" ]; then
         echo "Found APP_KEY in .env file."
     else
         echo "Generating a temporary APP_KEY..."
-        # We need a dummy .env or it fails
-        touch .env
+        [ ! -f .env ] && touch .env
         php artisan key:generate --show --no-interaction > /tmp/app_key
         export APP_KEY=$(cat /tmp/app_key | grep -oE "base64:[^ ]+")
         echo "Generated: $APP_KEY"
-        # Temporarily append to .env for PHP-FPM visibility if clear_env is tricky
-        echo "APP_KEY=$APP_KEY" >> .env
+        # Append only if not present to avoid duplicates
+        if ! grep -q "APP_KEY=" .env; then
+            echo "APP_KEY=$APP_KEY" >> .env
+        fi
         rm /tmp/app_key
     fi
 else
-    # Force it into .env if it's provided via Easypanel but not in .env
     echo "Using APP_KEY from environment."
-    echo "APP_KEY=$APP_KEY" > .env
+    # Only write to .env if not already there with same value
+    if [ -f .env ]; then
+        if ! grep -q "APP_KEY=$APP_KEY" .env; then
+            # Remove any old APP_KEY and append new one
+            sed -i '/APP_KEY=/d' .env
+            echo "APP_KEY=$APP_KEY" >> .env
+        fi
+    else
+        echo "APP_KEY=$APP_KEY" > .env
+    fi
 fi
 
 # Diagnostic: check for diagnostic files
