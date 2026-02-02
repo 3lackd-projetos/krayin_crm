@@ -11,7 +11,9 @@ class EnvironmentManager
      *
      * @return void
      */
-    public function __construct(protected DatabaseManager $databaseManager) {}
+    public function __construct(protected DatabaseManager $databaseManager)
+    {
+    }
 
     /**
      * Generate ENV File and Installation.
@@ -24,7 +26,7 @@ class EnvironmentManager
 
         $envPath = base_path('.env');
 
-        if (! file_exists($envPath)) {
+        if (!file_exists($envPath)) {
             if (file_exists($envExamplePath)) {
                 copy($envExamplePath, $envPath);
             } else {
@@ -73,11 +75,16 @@ class EnvironmentManager
             $envDBParams['APP_CURRENCY'] = $request['app_currency'];
         }
 
-        $data = file_get_contents(base_path('.env'));
+        $envPath = base_path('.env');
+        $envExamplePath = base_path('.env.example');
+
+        $data = file_exists($envPath)
+            ? file_get_contents($envPath)
+            : (file_exists($envExamplePath) ? file_get_contents($envExamplePath) : '');
 
         foreach ($envDBParams as $key => $value) {
             if (preg_match('/\s/', $value)) {
-                $value = '"'.$value.'"';
+                $value = '"' . $value . '"';
             }
 
             $data = preg_replace("/$key=(.*)/", "$key=$value", $data);

@@ -460,7 +460,12 @@ class Installer extends Command
      */
     protected function envUpdate(string $key, string $value): void
     {
-        $data = file_get_contents(base_path('.env'));
+        $envPath = base_path('.env');
+        $envExamplePath = base_path('.env.example');
+
+        $data = file_exists($envPath)
+            ? file_get_contents($envPath)
+            : (file_exists($envExamplePath) ? file_get_contents($envExamplePath) : '');
 
         // Check if $value contains spaces, and if so, add double quotes
         if (preg_match('/\s/', $value)) {
@@ -469,7 +474,7 @@ class Installer extends Command
 
         $data = preg_replace("/$key=(.*)/", "$key=$value", $data);
 
-        file_put_contents(base_path('.env'), $data);
+        file_put_contents($envPath, $data);
     }
 
     /**
