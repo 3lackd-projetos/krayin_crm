@@ -16,3 +16,5 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/chatwoot-bridge', [\App\Http\Controllers\ChatwootBridgeController::class, 'index'])->name('chatwoot.bridge');
