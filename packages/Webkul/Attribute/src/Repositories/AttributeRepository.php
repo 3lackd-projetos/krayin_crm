@@ -4,6 +4,8 @@ namespace Webkul\Attribute\Repositories;
 
 use Illuminate\Container\Container;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Webkul\Core\Eloquent\Repository;
 
 class AttributeRepository extends Repository
@@ -135,12 +137,22 @@ class AttributeRepository extends Repository
             $dbQuery->where($labelColumn, 'like', '%' . $query . '%');
         }
 
+        // For debugging purposes, let's log what we're doing
+        try {
+            $logMessage = "[" . date('Y-m-d H:i:s') . "] Lookup: $lookup, Query: $query, Table: $table\n";
+            file_put_contents(public_path('debug_lookup.txt'), $logMessage, FILE_APPEND);
+        } catch (\Exception $e) {
+        }
+
         $userIds = bouncer()->getAuthorizedUserIds();
 
         if ($userIds) {
             $column = Str::contains($lookupData['repository'], 'UserRepository') ? 'id' : 'user_id';
 
-            if (in_array($lookup, ['persons', 'organizations', 'leads', 'users'])) {
+            // Check if column exists in table to avoid SQL crashing
+            $hasColumn = \Illuminate\Support\Facades\Schema::hasColumn($table, $column);
+
+            if ($hasColumn) {
                 $dbQuery->where(function ($q) use ($column, $userIds) {
                     $q->whereIn($column, $userIds)
                         ->orWhereNull($column)
@@ -155,7 +167,7 @@ class AttributeRepository extends Repository
 
         $results = $dbQuery->limit(20)->get([
             $valueColumn . ' as id',
-            $labelColumn . ' as name'
+            $labelColumn . ' as name',
         ]);
 
         return $results->toArray();
