@@ -111,6 +111,7 @@ class ChatwootWebhookController extends Controller
         ]);
 
         $leadData = [
+            'entity_type' => 'leads', // Crucial for Krayin's AttributeValueRepository
             'title' => 'Lead Chatwoot - ' . $name,
             'user_id' => $person->user_id ?? 1,
             'person_id' => $person->id,
