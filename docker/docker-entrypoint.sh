@@ -68,6 +68,14 @@ php artisan route:clear || true
 # Flag check
 php artisan tinker --execute="try { if (app(\Webkul\Installer\Helpers\DatabaseManager::class)->isInstalled()) { @touch(storage_path('installed')); echo 'INSTALLED_FLAG_CREATED'; } } catch (\Exception \$e) { echo 'DB_CHECK_FAILED: ' . \$e->getMessage(); }" || true
 
+# Start services...
 echo "Starting services..."
 php-fpm -D
-nginx -g 'daemon off;'
+
+# Ensure log file exists and stream it to stdout in the background
+LOG_FILE="/var/www/storage/logs/laravel.log"
+touch $LOG_FILE
+chmod 666 $LOG_FILE
+tail -f $LOG_FILE &
+
+nginx -g "daemon off;"

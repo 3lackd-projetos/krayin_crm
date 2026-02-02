@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Webkul\Contact\Repositories\PersonRepository;
 use Webkul\Lead\Repositories\LeadRepository;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Collection;
 
 class ChatwootBridgeController extends Controller
 {
@@ -16,11 +19,13 @@ class ChatwootBridgeController extends Controller
 
     public function index(Request $request)
     {
+        Log::info('--- Chatwoot Bridge HEARTBEAT ---');
+
         try {
             $token = $request->query('token');
             $secret = env('CHATWOOT_BRIDGE_SECRET');
 
-            \Illuminate\Support\Facades\Log::info('Chatwoot Bridge Access', [
+            Log::info('Chatwoot Bridge Access', [
                 'email' => $request->query('email'),
                 'token_match' => ($token === $secret)
             ]);
@@ -38,7 +43,7 @@ class ChatwootBridgeController extends Controller
 
             $leads = collect();
             if ($person) {
-                // Fetch leads without eager loading first to see if it works
+                // Simplified lead fetch
                 $leads = $this->leadRepository->findWhere(['person_id' => $person->id]);
             }
 
@@ -48,15 +53,15 @@ class ChatwootBridgeController extends Controller
                 'email' => $email
             ]);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Chatwoot Bridge Crash: ' . $e->getMessage(), [
+            Log::error('Chatwoot Bridge CRASH: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
+                'line' => $e->getLine()
             ]);
 
+            // Return 200 but with error content for debugging
             return response()->view('chatwoot.bridge', [
-                'error' => 'Erro interno: ' . $e->getMessage()
-            ], 500);
+                'error' => 'ERRO CRÍTICO: ' . $e->getMessage() . ' em ' . $e->getFile() . ':' . $e->getLine()
+            ], 200);
         }
     }
 }
