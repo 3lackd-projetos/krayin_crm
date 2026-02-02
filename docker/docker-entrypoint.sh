@@ -26,7 +26,7 @@ php artisan storage:link --force || true
 # Check if installed - if so, ensure the flag file exists
 echo "Checking database state..."
 # Use php-fpm user context if possible, but here we just ensure the file exists
-php artisan tinker --execute="if (app(\Webkul\Installer\Helpers\DatabaseManager::class)->isInstalled()) { @touch(storage_path('installed')); echo 'INSTALLED_FLAG_CREATED'; }"
+php artisan tinker --execute="if (app(\Webkul\Installer\Helpers\DatabaseManager::class)->isInstalled()) { @touch(storage_path('installed')); echo 'INSTALLED_FLAG_CREATED'; }" || true
 
 # Fix permissions one last time for the web user
 echo "Setting permissions..."
