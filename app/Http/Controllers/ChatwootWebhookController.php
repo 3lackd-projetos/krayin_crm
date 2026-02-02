@@ -8,13 +8,15 @@ use Webkul\Contact\Repositories\PersonRepository;
 use Webkul\Contact\Repositories\OrganizationRepository;
 use Webkul\Lead\Repositories\LeadRepository;
 use Webkul\Attribute\Repositories\AttributeValueRepository;
+use Webkul\User\Repositories\UserRepository;
 
 class ChatwootWebhookController extends Controller
 {
     public function __construct(
         protected PersonRepository $personRepository,
         protected LeadRepository $leadRepository,
-        protected OrganizationRepository $organizationRepository
+        protected OrganizationRepository $organizationRepository,
+        protected UserRepository $userRepository
     ) {
     }
 
@@ -78,6 +80,17 @@ class ChatwootWebhookController extends Controller
         $phone = $contact['phone_number'] ?? ($contact['phone'] ?? '');
         $companyName = $contact['company_name'] ?? ($contact['additional_attributes']['company_name'] ?? null);
 
+        // 1.5 Map Assignee (Salesperson) from Chatwoot
+        $assigneeEmail = $payload['meta']['assignee']['email'] ?? null;
+        $crmOwnerId = 1; // Default Admin
+        if ($assigneeEmail) {
+            $owner = $this->userRepository->findOneByField('email', $assigneeEmail);
+            if ($owner) {
+                $crmOwnerId = $owner->id;
+                Log::info('Chatwoot Webhook: Mapped to Owner ' . $assigneeEmail);
+            }
+        }
+
         // 2. Manage Organization
         $organizationId = null;
         if ($companyName) {
@@ -86,7 +99,7 @@ class ChatwootWebhookController extends Controller
                 $organization = $this->organizationRepository->create([
                     'name' => $companyName,
                     'entity_type' => 'organizations',
-                    'user_id' => 1,
+                    'user_id' => $crmOwnerId,
                 ]);
                 Log::info('Chatwoot Webhook: Created Organization ' . $companyName);
             }
@@ -103,6 +116,7 @@ class ChatwootWebhookController extends Controller
             'emails' => [['value' => $email, 'label' => 'work']],
             'entity_type' => 'persons',
             'organization_id' => $organizationId,
+            'user_id' => $crmOwnerId,
         ];
 
         if ($phone) {
@@ -110,9 +124,8 @@ class ChatwootWebhookController extends Controller
         }
 
         if (!$person) {
-            $personData['user_id'] = 1; // Default Admin
             $person = $this->personRepository->create($personData);
-            Log::info('Chatwoot Webhook: Created Person ' . $email);
+            Log::info('Chatwoot Webhook: Created Person ' . $email . ' owned by ' . $crmOwnerId);
         } else {
             // Update existing person with new info from Chatwoot
             $this->personRepository->update($personData, $person->id);
@@ -132,7 +145,7 @@ class ChatwootWebhookController extends Controller
         $leadData = [
             'entity_type' => 'leads',
             'title' => 'Lead Chatwoot - ' . $name,
-            'user_id' => $person->user_id ?? 1,
+            'user_id' => $crmOwnerId,
             'person_id' => $person->id,
             'lead_source_id' => 1,
             'lead_type_id' => 1,
