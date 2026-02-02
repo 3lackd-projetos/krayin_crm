@@ -45,8 +45,21 @@ if [ -z "$APP_KEY" ]; then
     fi
 else
     echo "Using APP_KEY from environment."
-    set_env_var "APP_KEY" "$APP_KEY"
+    # Ensure it starts with base64:
+    case "$APP_KEY" in
+        base64:*) set_env_var "APP_KEY" "$APP_KEY" ;;
+        *) set_env_var "APP_KEY" "base64:$APP_KEY" ;;
+    esac
 fi
+
+# Additional variables from user's latest list
+set_env_var "APP_TIMEZONE" "$APP_TIMEZONE"
+set_env_var "APP_LOCALE" "$APP_LOCALE"
+set_env_var "APP_CURRENCY" "$APP_CURRENCY"
+set_env_var "LOG_CHANNEL" "$LOG_CHANNEL"
+set_env_var "LOG_LEVEL" "$LOG_LEVEL"
+set_env_var "SESSION_DRIVER" "$SESSION_DRIVER"
+set_env_var "SESSION_LIFETIME" "$SESSION_LIFETIME"
 
 # Diagnostic: check for diagnostic files
 if [ -f public/env_check.php ]; then
