@@ -118,27 +118,44 @@ class AttributeRepository extends Repository
     {
         $lookupData = config('attribute_lookups.' . $lookup);
 
+        if (!$lookupData) {
+            return [];
+        }
+
+        $labelColumn = $lookupData['label_column'] ?? 'name';
+
         if (!count($columns)) {
-            $columns = [($lookupData['value_column'] ?? 'id') . ' as id', ($lookupData['label_column'] ?? 'name') . ' as name'];
+            $columns = [($lookupData['value_column'] ?? 'id') . ' as id', $labelColumn . ' as name'];
         }
 
         $repository = app($lookupData['repository']);
 
         $query = urldecode($query);
 
-        if ($userIds = bouncer()->getAuthorizedUserIds()) {
-            $repository->scopeQuery(function ($queryBuilder) use ($userIds, $lookupData) {
-                $table = $queryBuilder->getModel()->getTable();
+        $queryBuilder = $repository->getModel()->newQuery();
 
-                $column = $lookupData['repository'] == 'Webkul\User\Repositories\UserRepository' ? 'id' : 'user_id';
-
-                return $queryBuilder->whereIn($table . '.' . $column, $userIds);
-            });
+        if ($query) {
+            $queryBuilder->where($labelColumn, 'like', '%' . $query . '%');
         }
 
-        return $repository->findWhere([
-            [$lookupData['label_column'] ?? 'name', 'like', '%' . $query . '%'],
-        ], $columns);
+        $userIds = bouncer()->getAuthorizedUserIds();
+
+        if ($userIds) {
+            $column = Str::contains($lookupData['repository'], 'UserRepository') ? 'id' : 'user_id';
+
+            if (in_array($lookup, ['persons', 'organizations', 'leads', 'users'])) {
+                $queryBuilder->where(function ($q) use ($column, $userIds) {
+                    $q->whereIn($column, $userIds)
+                        ->orWhereNull($column);
+                });
+            }
+        }
+
+        if ($lookup === 'users') {
+            $queryBuilder->where('status', 1);
+        }
+
+        return $queryBuilder->limit(20)->get($columns);
     }
 
     /**
