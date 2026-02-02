@@ -38,6 +38,7 @@ class DatabaseManager
 
             return true;
         } catch (Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Krayin Install Check Error: ' . $e->getMessage());
             return false;
         }
     }
