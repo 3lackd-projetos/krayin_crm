@@ -48,21 +48,32 @@ class ChatwootWebhookController extends Controller
 
     protected function processEngagement($payload)
     {
-        // 1. Try different ways to find the contact info
-        $contact = $payload['sender'] ?? ($payload['contact'] ?? null);
+        // 1. Try multiple ways to find the contact info (aggressive extraction)
+        $contact = null;
 
-        // In conversation_created/updated, it's often in meta
-        if (!$contact && isset($payload['meta']['sender'])) {
-            $contact = $payload['meta']['sender'];
+        if (isset($payload['sender'])) {
+            $contact = $payload['sender'];
+        } elseif (isset($payload['contact'])) {
+            $contact = $payload['contact'];
+        } elseif (isset($payload['data']) && is_array($payload['data'])) {
+            $contact = $payload['data']; // contact_updated often puts data in 'data'
+        } elseif (isset($payload['meta']['sender'])) {
+            $contact = $payload['meta']['sender']; // conversation_created
+        } elseif (isset($payload['email'])) {
+            $contact = $payload; // payload itself IS the contact
         }
 
         if (!$contact || empty($contact['email'])) {
+            Log::info('Chatwoot Webhook: Skipped - No email found in payload structure.', [
+                'keys' => array_keys($payload),
+                'event' => $payload['event'] ?? 'unknown'
+            ]);
             return response()->json(['status' => 'no_email_skipped']);
         }
 
         $email = $contact['email'];
         $name = $contact['name'] ?? 'Chatwoot User';
-        $phone = $contact['phone_number'] ?? '';
+        $phone = $contact['phone_number'] ?? ($contact['phone'] ?? '');
 
         // 2. Find or Create Person (using JSON aware search)
         $person = $this->personRepository->scopeQuery(function ($query) use ($email) {
