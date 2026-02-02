@@ -38,11 +38,11 @@ class Installer extends Command
      * @var array
      */
     protected $locales = [
-        'ar'    => 'Arabic',
-        'en'    => 'English',
-        'tr'    => 'Turkish',
-        'es'    => 'Spanish',
-        'fa'    => 'Persian',
+        'ar' => 'Arabic',
+        'en' => 'English',
+        'tr' => 'Turkish',
+        'es' => 'Spanish',
+        'fa' => 'Persian',
         'pt_BR' => 'Portuguese',
     ];
 
@@ -123,7 +123,7 @@ class Installer extends Command
      */
     public function handle()
     {
-        $applicationDetails = ! $this->option('skip-env-check')
+        $applicationDetails = !$this->option('skip-env-check')
             ? $this->checkForEnvFile()
             : [];
 
@@ -137,7 +137,7 @@ class Installer extends Command
 
         $this->warn('Step: Seeding basic data for Krayin kickstart...');
         $this->info(app(KrayinDatabaseSeeder::class)->run([
-            'locale'   => $applicationDetails['locale'] ?? 'en',
+            'locale' => $applicationDetails['locale'] ?? 'en',
             'currency' => $applicationDetails['currency'] ?? 'USD',
         ]));
 
@@ -151,7 +151,7 @@ class Installer extends Command
         $this->warn('Step: Clearing cached bootstrap files...');
         $this->call('optimize:clear');
 
-        if (! $this->option('skip-admin-creation')) {
+        if (!$this->option('skip-admin-creation')) {
             $this->warn('Step: Create admin credentials...');
 
             $this->createAdminCredentials();
@@ -167,7 +167,7 @@ class Installer extends Command
      */
     protected function checkForEnvFile()
     {
-        if (! file_exists(base_path('.env'))) {
+        if (!file_exists(base_path('.env'))) {
             $this->info('Creating the environment configuration file.');
 
             File::copy('.env.example', '.env');
@@ -221,7 +221,7 @@ class Installer extends Command
             date_default_timezone_get()
         );
 
-        $this->info('Your Default Timezone is '.date_default_timezone_get());
+        $this->info('Your Default Timezone is ' . date_default_timezone_get());
 
         $locale = $this->updateEnvChoice(
             'APP_LOCALE',
@@ -236,7 +236,7 @@ class Installer extends Command
         );
 
         return [
-            'locale'   => $locale,
+            'locale' => $locale,
             'currency' => $currency,
         ];
     }
@@ -252,13 +252,13 @@ class Installer extends Command
                 ['mysql', 'pgsql', 'sqlsrv']
             ),
 
-            'DB_HOST'       => text(
+            'DB_HOST' => text(
                 label: 'Please enter the database host',
                 default: env('DB_HOST', '127.0.0.1'),
                 required: true
             ),
 
-            'DB_PORT'       => text(
+            'DB_PORT' => text(
                 label: 'Please enter the database port',
                 default: env('DB_PORT', '3306'),
                 required: true
@@ -277,9 +277,10 @@ class Installer extends Command
                 validate: function ($value) {
                     $input = strlen($value);
 
-                    if ($input
+                    if (
+                        $input
                         && ($input < 1
-                        || $input > 6)
+                            || $input > 6)
                     ) {
                         return 'The database prefix must be between 1 and 6 characters.';
                     }
@@ -305,9 +306,9 @@ class Installer extends Command
         ];
 
         if (
-            ! $databaseDetails['DB_DATABASE']
-            || ! $databaseDetails['DB_USERNAME']
-            || ! $databaseDetails['DB_PASSWORD']
+            !$databaseDetails['DB_DATABASE']
+            || !$databaseDetails['DB_USERNAME']
+            || !$databaseDetails['DB_PASSWORD']
         ) {
             return $this->error('Please enter the database credentials.');
         }
@@ -335,9 +336,9 @@ class Installer extends Command
         $adminEmail = text(
             label: 'Enter the email address of the admin user',
             default: 'admin@example.com',
-            validate: fn (string $value) => match (true) {
-                ! filter_var($value, FILTER_VALIDATE_EMAIL) => 'The email address you entered is not valid please try again.',
-                default                                     => null
+            validate: fn(string $value) => match (true) {
+                !filter_var($value, FILTER_VALIDATE_EMAIL) => 'The email address you entered is not valid please try again.',
+                default => null
             }
         );
 
@@ -353,11 +354,11 @@ class Installer extends Command
             DB::table('users')->updateOrInsert(
                 ['id' => 1],
                 [
-                    'name'     => $adminName,
-                    'email'    => $adminEmail,
+                    'name' => $adminName,
+                    'email' => $adminEmail,
                     'password' => $password,
-                    'role_id'  => 1,
-                    'status'   => 1,
+                    'role_id' => 1,
+                    'status' => 1,
                 ]
             );
 
@@ -368,9 +369,9 @@ class Installer extends Command
             $this->info('-----------------------------');
             $this->info('Congratulations!');
             $this->info('The installation has been finished and you can now use Krayin.');
-            $this->info('Go to '.env('APP_URL').'/admin/dashboard'.' and authenticate with:');
-            $this->info('Email: '.$adminEmail);
-            $this->info('Password: '.$adminPassword);
+            $this->info('Go to ' . env('APP_URL') . '/admin/dashboard' . ' and authenticate with:');
+            $this->info('Email: ' . $adminEmail);
+            $this->info('Password: ' . $adminPassword);
             $this->info('Cheers!');
 
             Event::dispatch('krayin.installed');
@@ -395,11 +396,11 @@ class Installer extends Command
          * Setting application configuration.
          */
         config([
-            'app.env'      => $this->getEnvAtRuntime('APP_ENV'),
-            'app.name'     => $this->getEnvAtRuntime('APP_NAME'),
-            'app.url'      => $this->getEnvAtRuntime('APP_URL'),
+            'app.env' => $this->getEnvAtRuntime('APP_ENV'),
+            'app.name' => $this->getEnvAtRuntime('APP_NAME'),
+            'app.url' => $this->getEnvAtRuntime('APP_URL'),
             'app.timezone' => $this->getEnvAtRuntime('APP_TIMEZONE'),
-            'app.locale'   => $this->getEnvAtRuntime('APP_LOCALE'),
+            'app.locale' => $this->getEnvAtRuntime('APP_LOCALE'),
             'app.currency' => $this->getEnvAtRuntime('APP_CURRENCY'),
         ]);
 
@@ -409,12 +410,12 @@ class Installer extends Command
         $databaseConnection = $this->getEnvAtRuntime('DB_CONNECTION');
 
         config([
-            "database.connections.{$databaseConnection}.host"     => $this->getEnvAtRuntime('DB_HOST'),
-            "database.connections.{$databaseConnection}.port"     => $this->getEnvAtRuntime('DB_PORT'),
+            "database.connections.{$databaseConnection}.host" => $this->getEnvAtRuntime('DB_HOST'),
+            "database.connections.{$databaseConnection}.port" => $this->getEnvAtRuntime('DB_PORT'),
             "database.connections.{$databaseConnection}.database" => $this->getEnvAtRuntime('DB_DATABASE'),
             "database.connections.{$databaseConnection}.username" => $this->getEnvAtRuntime('DB_USERNAME'),
             "database.connections.{$databaseConnection}.password" => $this->getEnvAtRuntime('DB_PASSWORD'),
-            "database.connections.{$databaseConnection}.prefix"   => $this->getEnvAtRuntime('DB_PREFIX'),
+            "database.connections.{$databaseConnection}.prefix" => $this->getEnvAtRuntime('DB_PREFIX'),
         ]);
 
         DB::purge($databaseConnection);
@@ -463,7 +464,7 @@ class Installer extends Command
 
         // Check if $value contains spaces, and if so, add double quotes
         if (preg_match('/\s/', $value)) {
-            $value = '"'.$value.'"';
+            $value = '"' . $value . '"';
         }
 
         $data = preg_replace("/$key=(.*)/", "$key=$value", $data);
@@ -476,20 +477,6 @@ class Installer extends Command
      */
     protected static function getEnvAtRuntime(string $key): string|bool
     {
-        if ($data = file(base_path('.env'))) {
-            foreach ($data as $line) {
-                $line = preg_replace('/\s+/', '', $line);
-
-                $rowValues = explode('=', $line);
-
-                if (strlen($line) !== 0) {
-                    if (strpos($key, $rowValues[0]) !== false) {
-                        return $rowValues[1];
-                    }
-                }
-            }
-        }
-
-        return false;
+        return env($key, false);
     }
 }
