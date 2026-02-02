@@ -32,7 +32,7 @@ class ChatwootBridgeController extends Controller
 
         $leads = [];
         if ($person) {
-            $leads = $this->leadRepository->findWhere(['person_id' => $person->id]);
+            $leads = $this->leadRepository->with(['stage'])->findWhere(['person_id' => $person->id]);
         }
 
         return view('chatwoot.bridge', [
