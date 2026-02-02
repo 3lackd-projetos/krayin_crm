@@ -1,10 +1,11 @@
 @php
     $quote = app('\Webkul\Quote\Repositories\QuoteRepository')->getModel();
 
+    $quote->user_id = auth()->user()->id;
+
     if (isset($lead)) {
         $quote->fill([
             'person_id'       => $lead->person_id,
-            'user_id'         => $lead->user_id,
             'billing_address' => $lead->person->organization ? $lead->person->organization->address : null
         ]);
     }
