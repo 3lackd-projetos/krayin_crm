@@ -1,3 +1,6 @@
+#!/bin/sh
+echo "--- Krayin CRM Docker Entrypoint ---"
+
 # Function to add/update env var in .env
 set_env_var() {
     VAR_NAME=$1
