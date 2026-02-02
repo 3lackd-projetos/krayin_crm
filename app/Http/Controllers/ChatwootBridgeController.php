@@ -16,6 +16,11 @@ class ChatwootBridgeController extends Controller
 
     public function index(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('Chatwoot Bridge Access Attempt', [
+            'email' => $request->query('email'),
+            'ip' => $request->ip()
+        ]);
+
         $token = $request->query('token');
         $secret = env('CHATWOOT_BRIDGE_SECRET');
 
