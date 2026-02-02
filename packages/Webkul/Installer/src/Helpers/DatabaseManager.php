@@ -15,28 +15,24 @@ class DatabaseManager
      */
     public function isInstalled()
     {
-        if (! file_exists(base_path('.env'))) {
-            return false;
-        }
-
         try {
             DB::connection()->getPDO();
 
             $isConnected = (bool) DB::connection()->getDatabaseName();
 
-            if (! $isConnected) {
+            if (!$isConnected) {
                 return false;
             }
 
             $hasUserTable = Schema::hasTable('users');
 
-            if (! $hasUserTable) {
+            if (!$hasUserTable) {
                 return false;
             }
 
             $userCount = DB::table('users')->count();
 
-            if (! $userCount) {
+            if (!$userCount) {
                 return false;
             }
 
@@ -76,8 +72,8 @@ class DatabaseManager
     {
         try {
             app(KrayinDatabaseSeeder::class)->run([
-                'default_locale'     => $data['parameter']['default_locales'],
-                'default_currency'   => $data['parameter']['default_currency'],
+                'default_locale' => $data['parameter']['default_locales'],
+                'default_currency' => $data['parameter']['default_currency'],
             ]);
 
             $this->storageLink();
