@@ -6,6 +6,7 @@ use Illuminate\Container\Container;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 use Webkul\Core\Eloquent\Repository;
 
 class AttributeRepository extends Repository
@@ -121,6 +122,7 @@ class AttributeRepository extends Repository
         $lookupData = config('attribute_lookups.' . $lookup);
 
         if (!$lookupData) {
+            Log::warning("Lookup data configuration not found for key: $lookup");
             return [];
         }
 
@@ -131,17 +133,10 @@ class AttributeRepository extends Repository
 
         $query = urldecode((string) $query);
 
-        $dbQuery = \Illuminate\Support\Facades\DB::table($table);
+        $dbQuery = DB::table($table);
 
         if ($query !== '') {
             $dbQuery->where($labelColumn, 'like', '%' . $query . '%');
-        }
-
-        // For debugging purposes, let's log what we're doing
-        try {
-            $logMessage = "[" . date('Y-m-d H:i:s') . "] Lookup: $lookup, Query: $query, Table: $table\n";
-            file_put_contents(public_path('debug_lookup.txt'), $logMessage, FILE_APPEND);
-        } catch (\Exception $e) {
         }
 
         $userIds = bouncer()->getAuthorizedUserIds();
@@ -150,9 +145,7 @@ class AttributeRepository extends Repository
             $column = Str::contains($lookupData['repository'], 'UserRepository') ? 'id' : 'user_id';
 
             // Check if column exists in table to avoid SQL crashing
-            $hasColumn = \Illuminate\Support\Facades\Schema::hasColumn($table, $column);
-
-            if ($hasColumn) {
+            if (Schema::hasColumn($table, $column)) {
                 $dbQuery->where(function ($q) use ($column, $userIds) {
                     $q->whereIn($column, $userIds)
                         ->orWhereNull($column)
@@ -164,6 +157,15 @@ class AttributeRepository extends Repository
         if ($lookup === 'users') {
             $dbQuery->where('status', 1);
         }
+
+        // Standard Laravel logging for production reliability
+        Log::info("Lookup Search Executed", [
+            'lookup' => $lookup,
+            'query' => $query,
+            'table' => $table,
+            'sql' => $dbQuery->toSql(),
+            'binds' => $dbQuery->getBindings()
+        ]);
 
         $results = $dbQuery->limit(20)->get([
             $valueColumn . ' as id',
