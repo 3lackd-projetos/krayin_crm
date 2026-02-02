@@ -45,6 +45,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     dom \
     fileinfo \
     ctype \
+    tokenizer \
+    gettext \
     opcache
 
 # Get composer
@@ -59,6 +61,7 @@ COPY --from=assets /app/public/build ./public/build
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Configuration
+COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
