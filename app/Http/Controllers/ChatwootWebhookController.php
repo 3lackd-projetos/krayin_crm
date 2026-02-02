@@ -33,6 +33,7 @@ class ChatwootWebhookController extends Controller
 
         $allowedEvents = [
             'contact_created',
+            'contact_updated',
             'conversation_created',
             'conversation_status_changed',
             'message_created'
@@ -63,23 +64,29 @@ class ChatwootWebhookController extends Controller
         $name = $contact['name'] ?? 'Chatwoot User';
         $phone = $contact['phone_number'] ?? '';
 
-        // 2. Find or Create Person
-        $person = $this->personRepository->findOneByField('email', $email);
+        // 2. Find or Create Person (using JSON aware search)
+        $person = $this->personRepository->scopeQuery(function ($query) use ($email) {
+            return $query->whereJsonContains('emails', ['value' => $email]);
+        })->first();
+
+        $personData = [
+            'name' => $name,
+            'emails' => [['value' => $email, 'label' => 'work']],
+            'entity_type' => 'persons',
+        ];
+
+        if ($phone) {
+            $personData['contact_numbers'] = [['value' => $phone, 'label' => 'work']];
+        }
 
         if (!$person) {
-            $personData = [
-                'name' => $name,
-                'emails' => [['value' => $email, 'label' => 'work']],
-                'entity_type' => 'persons',
-                'user_id' => 1,
-            ];
-
-            if ($phone) {
-                $personData['contact_numbers'] = [['value' => $phone, 'label' => 'work']];
-            }
-
+            $personData['user_id'] = 1; // Default Admin
             $person = $this->personRepository->create($personData);
             Log::info('Chatwoot Webhook: Created Person ' . $email);
+        } else {
+            // Update existing person with new info from Chatwoot
+            $this->personRepository->update($personData, $person->id);
+            Log::info('Chatwoot Webhook: Updated Person ' . $email);
         }
 
         // 3. Extract IDs for Reverse Sync
@@ -94,7 +101,7 @@ class ChatwootWebhookController extends Controller
 
         $leadData = [
             'title' => 'Lead Chatwoot - ' . $name,
-            'user_id' => 1,
+            'user_id' => $person->user_id ?? 1,
             'person_id' => $person->id,
             'lead_source_id' => 1,
             'lead_type_id' => 1,
@@ -105,7 +112,7 @@ class ChatwootWebhookController extends Controller
         ];
 
         if (!$existingLead) {
-            $leadData['description'] = 'Lead criado automaticamente via Chatwoot.';
+            $leadData['description'] = 'Lead criado automaticamente via Chatwoot Webhook.';
             $this->leadRepository->create($leadData);
             Log::info('Chatwoot Webhook: Created Lead for ' . $email);
         } else {
