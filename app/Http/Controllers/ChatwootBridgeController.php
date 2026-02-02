@@ -22,17 +22,17 @@ class ChatwootBridgeController extends Controller
 
     public function index(Request $request)
     {
-        Log::info('--- Chatwoot Bridge HEARTBEAT ---');
+        Log::info('--- CORAÇÃO DA PONTE CHATWOOT ATIVO ---');
 
         try {
             $token = $request->query('token');
             $secret = env('CHATWOOT_BRIDGE_SECRET');
             $agentEmail = $request->query('agent_email');
 
-            Log::info('Chatwoot Bridge Access', [
+            Log::info('Acesso à Ponte Chatwoot', [
                 'email' => $request->query('email'),
-                'agent' => $agentEmail,
-                'token_match' => ($token === $secret)
+                'agente' => $agentEmail,
+                'token_valido' => ($token === $secret)
             ]);
 
             if (!$secret || $token !== $secret) {
@@ -99,9 +99,9 @@ class ChatwootBridgeController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Chatwoot Bridge CRASH: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
+            Log::error('FALHA CRÍTICA NA PONTE: ' . $e->getMessage(), [
+                'arquivo' => $e->getFile(),
+                'linha' => $e->getLine()
             ]);
 
             return $this->safeView([

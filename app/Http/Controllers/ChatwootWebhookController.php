@@ -26,14 +26,14 @@ class ChatwootWebhookController extends Controller
         $secret = env('CHATWOOT_BRIDGE_SECRET');
 
         if (!$secret || $token !== $secret) {
-            Log::warning('Chatwoot Webhook: Unauthorized access attempt.');
-            return response()->json(['error' => 'Unauthorized'], 401);
+            Log::warning('Webhook Chatwoot: Tentativa de acesso não autorizado.');
+            return response()->json(['error' => 'Não autorizado'], 401);
         }
 
         $payload = $request->all();
         $event = $payload['event'] ?? '';
 
-        Log::info('Chatwoot Webhook Received: ' . $event);
+        Log::info('Webhook Chatwoot Recebido: ' . $event);
 
         $allowedEvents = [
             'contact_created',
@@ -68,15 +68,15 @@ class ChatwootWebhookController extends Controller
         }
 
         if (!$contact || empty($contact['email'])) {
-            Log::info('Chatwoot Webhook: Skipped - No email found in payload structure.', [
+            Log::info('Webhook Chatwoot: Ignorado - Nenhum e-mail encontrado no payload.', [
                 'keys' => array_keys($payload),
-                'event' => $payload['event'] ?? 'unknown'
+                'event' => $payload['event'] ?? 'desconhecido'
             ]);
-            return response()->json(['status' => 'no_email_skipped']);
+            return response()->json(['status' => 'sem_email_ignorado']);
         }
 
         $email = $contact['email'];
-        $name = $contact['name'] ?? 'Chatwoot User';
+        $name = $contact['name'] ?? 'Contato Chatwoot';
         $phone = $contact['phone_number'] ?? ($contact['phone'] ?? '');
         $companyName = $contact['company_name'] ?? ($contact['additional_attributes']['company_name'] ?? null);
 
@@ -87,7 +87,7 @@ class ChatwootWebhookController extends Controller
             $owner = $this->userRepository->findOneByField('email', $assigneeEmail);
             if ($owner) {
                 $crmOwnerId = $owner->id;
-                Log::info('Chatwoot Webhook: Mapped to Owner ' . $assigneeEmail);
+                Log::info('Webhook Chatwoot: Mapeado para Responsável ' . $assigneeEmail);
             }
         }
 
@@ -101,7 +101,7 @@ class ChatwootWebhookController extends Controller
                     'entity_type' => 'organizations',
                     'user_id' => $crmOwnerId,
                 ]);
-                Log::info('Chatwoot Webhook: Created Organization ' . $companyName);
+                Log::info('Webhook Chatwoot: Organização Criada ' . $companyName);
             }
             $organizationId = $organization->id;
         }
@@ -113,23 +113,23 @@ class ChatwootWebhookController extends Controller
 
         $personData = [
             'name' => $name,
-            'emails' => [['value' => $email, 'label' => 'work']],
+            'emails' => [['value' => $email, 'label' => 'comercial']],
             'entity_type' => 'persons',
             'organization_id' => $organizationId,
             'user_id' => $crmOwnerId,
         ];
 
         if ($phone) {
-            $personData['contact_numbers'] = [['value' => $phone, 'label' => 'work']];
+            $personData['contact_numbers'] = [['value' => $phone, 'label' => 'comercial']];
         }
 
         if (!$person) {
             $person = $this->personRepository->create($personData);
-            Log::info('Chatwoot Webhook: Created Person ' . $email . ' owned by ' . $crmOwnerId);
+            Log::info('Webhook Chatwoot: Pessoa Criada ' . $email . ' sob responsabilidade de ' . $crmOwnerId);
         } else {
             // Update existing person with new info from Chatwoot
             $this->personRepository->update($personData, $person->id);
-            Log::info('Chatwoot Webhook: Updated Person ' . $email);
+            Log::info('Webhook Chatwoot: Pessoa Atualizada ' . $email);
         }
 
         // 4. Extract IDs for Reverse Sync
@@ -156,13 +156,13 @@ class ChatwootWebhookController extends Controller
         ];
 
         if (!$existingLead) {
-            $leadData['description'] = 'Lead criado automaticamente via Chatwoot Webhook.';
+            $leadData['description'] = 'Lead gerado automaticamente pela integração Chatwoot.';
             $this->leadRepository->create($leadData);
-            Log::info('Chatwoot Webhook: Created Lead for ' . $email);
+            Log::info('Webhook Chatwoot: Lead Criado para ' . $email);
         } else {
             // Update conversation mapping on existing lead
             $this->leadRepository->update($leadData, $existingLead->id);
-            Log::info('Chatwoot Webhook: Updated Mapping for Lead ' . $existingLead->id);
+            Log::info('Webhook Chatwoot: Mapeamento Atualizado para Lead ' . $existingLead->id);
         }
 
         if (!$existingLead) {

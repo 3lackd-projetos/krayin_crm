@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Krayin CRM Bridge</title>
+    <title>3lackd CRM - Ponte Chatwoot</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -92,7 +92,8 @@
                 <a onclick="window.location.reload();" class="refresh-btn" title="Recarregar">🔄</a>
             </div>
             <p>{{ $error }}</p>
-            <p style="font-size: 11px; color: #666;">Verifique as variavéis de ambiente no App Dashboard do Chatwoot.</p>
+            <p style="font-size: 11px; color: #666;">Verifique as variáveis de ambiente no Painel de Controle do Chatwoot.
+            </p>
             <a href="{{ url('/admin/dashboard') }}" target="_blank" class="btn">Ir para Dashboard do CRM</a>
             <a href="{{ url('/admin/contacts/persons') }}" target="_blank" class="btn" style="background: #666;">Ver
                 Contatos</a>
@@ -100,7 +101,7 @@
     @elseif(!$person)
         <div class="card">
             <div class="header">
-                Krayin CRM
+                3lackd CRM
                 <a onclick="window.location.reload();" class="refresh-btn" title="Recarregar">🔄</a>
             </div>
             <p>Cliente não encontrado: <strong>{{ $email }}</strong></p>
@@ -163,8 +164,8 @@
             </div>
         @else
             <div class="card">
-                <div class="header">Leads</div>
-                <p>Nenhum lead encontrado para este contato.</p>
+                <div class="header"> Leads Atribuídos </div>
+                <p>Nenhum lead encontrado sob sua gestão para este contato.</p>
                 <a href="{{ url('/admin/leads/create') }}?person_id={{ $person->id }}&user_id={{ $agent->id ?? '' }}"
                     target="_blank" class="btn">+
                     Novo Lead</a>
@@ -174,7 +175,7 @@
         @if(isset($agent))
             <div style="font-size: 10px; color: #999; text-align: center; margin-top: 10px;">
                 Identificado como: <strong>{{ $agent->name }}</strong><br>
-                Caminho ACL: {{ $agent->role->name ?? 'Padrão' }}
+                Permissões: {{ $agent->role->name ?? 'Corretor/Agente' }}
             </div>
         @endif
     @endif
