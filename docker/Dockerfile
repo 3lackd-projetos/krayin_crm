@@ -26,13 +26,13 @@ RUN apk add --no-cache \
     unzip \
     git \
     curl \
-    icu-dev
+    icu-dev \
+    gettext-dev
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install \
     pdo_mysql \
-    mbstring \
     exif \
     pcntl \
     bcmath \
@@ -41,11 +41,6 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     intl \
     soap \
     calendar \
-    xml \
-    dom \
-    fileinfo \
-    ctype \
-    tokenizer \
     gettext \
     opcache
 
