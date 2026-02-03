@@ -251,10 +251,10 @@
             <td style="text-align: left;">
                 @if (core()->getConfigData('general.design.admin_logo.logo_image'))
                     <img class="logo-img"
-                        src="{{ Storage::url(core()->getConfigData('general.design.admin_logo.logo_image')) }}"
+                        src="{{ public_path('storage/' . core()->getConfigData('general.design.admin_logo.logo_image')) }}"
                         alt="{{ config('app.name') }}" />
                 @else
-                    <img class="logo-img" src="{{ asset('vendor/webkul/admin/assets/images/logo.png') }}"
+                    <img class="logo-img" src="{{ public_path('vendor/webkul/admin/assets/images/logo.png') }}"
                         alt="{{ config('app.name') }}" />
                 @endif
             </td>
