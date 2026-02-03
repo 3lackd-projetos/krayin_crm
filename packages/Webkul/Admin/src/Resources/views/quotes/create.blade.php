@@ -595,9 +595,13 @@
                     },
 
                     handleLookupAdded(e) {
+                        if (! e.detail) {
+                            return;
+                        }
+
                          const { item, attribute } = e.detail;
 
-                         if (attribute.code === 'person_id') {
+                         if (attribute && attribute.code === 'person_id') {
                              this.fetchLastAddress(item.id);
                          }
                     },
