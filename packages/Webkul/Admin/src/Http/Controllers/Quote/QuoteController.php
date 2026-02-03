@@ -195,4 +195,26 @@ class QuoteController extends Controller
             'Quote_' . $quote->subject . '_' . $quote->created_at->format('d-m-Y')
         );
     }
+
+    /**
+     * Get the last address for the specified person.
+     */
+    public function getLastAddress($personId): JsonResponse
+    {
+        $quote = $this->quoteRepository->findOneWhere([
+            'person_id' => $personId,
+        ]);
+
+        if (!$quote) {
+            return response()->json([
+                'billing_address' => [],
+                'shipping_address' => [],
+            ]);
+        }
+
+        return response()->json([
+            'billing_address' => $quote->billing_address,
+            'shipping_address' => $quote->shipping_address,
+        ]);
+    }
 }

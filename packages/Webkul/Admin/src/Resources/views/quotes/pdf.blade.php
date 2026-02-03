@@ -39,73 +39,63 @@
         <!-- lang supports inclusion -->
         <style type="text/css">
             * {
-                margin: 0;
-                padding: 0;
                 box-sizing: border-box;
-                font-family: {{ $fontFamily['regular'] }};
             }
 
             body {
-                font-size: 10px;
-                color: #091341;
-                font-family: "{{ $fontFamily['regular'] }}";
+                font-size: 12px;
+                color: #333;
+                font-family: {{ $fontFamily['regular'] }};
+                line-height: 1.4;
             }
 
             b, th {
-                font-family: "{{ $fontFamily['bold'] }}";
+                font-family: {{ $fontFamily['bold'] }};
+                font-weight: bold;
             }
 
             .page-content {
-                padding: 12px;
+                padding: 0;
             }
 
             .page-header {
-                border-bottom: 1px solid #E9EFFC;
-                text-align: center;
-                font-size: 24px;
-                text-transform: uppercase;
-                color: #000DBB;
-                padding: 24px 0;
-                margin: 0;
+                padding-bottom: 20px;
+                border-bottom: 2px solid #eee;
+                margin-bottom: 20px;
             }
 
             .logo-container {
-                position: absolute;
-                top: 20px;
-                left: 20px;
-            }
-
-            .logo-container.rtl {
-                left: auto;
-                right: 20px;
+                text-align: left;
+                margin-bottom: 10px;
             }
 
             .logo-container img {
-                max-width: 100%;
-                height: auto;
+                max-height: 60px;
+                max-width: 200px;
             }
 
-            .page-header b {
-                display: inline-block;
-                vertical-align: middle;
-            }
-
-            .small-text {
-                font-size: 7px;
+            .quote-title {
+                text-align: right;
+                font-size: 28px;
+                color: #333;
+                text-transform: uppercase;
+                float: right;
             }
 
             table {
                 width: 100%;
-                border-spacing: 1px 0;
-                border-collapse: separate;
-                margin-bottom: 16px;
+                border-collapse: collapse;
+                margin-bottom: 20px;
             }
             
             table thead th {
-                background-color: #E9EFFC;
-                color: #000DBB;
-                padding: 6px 18px;
+                background-color: #f8f9fa;
+                color: #555;
+                padding: 10px;
                 text-align: left;
+                border-bottom: 1px solid #ddd;
+                text-transform: uppercase;
+                font-size: 10px;
             }
 
             table.rtl thead tr th {
@@ -113,9 +103,8 @@
             }
 
             table tbody td {
-                padding: 9px 18px;
-                border-bottom: 1px solid #E9EFFC;
-                text-align: left;
+                padding: 10px;
+                border-bottom: 1px solid #eee;
                 vertical-align: top;
             }
 
@@ -123,38 +112,42 @@
                 text-align: right;
             }
 
-            .summary {
+            .summary-container {
                 width: 100%;
-                display: inline-block;
+                margin-top: 20px;
             }
 
-            .summary table {
+            .summary-table {
+                width: 40%;
                 float: right;
-                width: 250px;
-                padding-top: 5px;
-                padding-bottom: 5px;
-                background-color: #E9EFFC;
-                white-space: nowrap;
             }
 
-            .summary table.rtl {
-                width: 280px;
-            }
-
-            .summary table.rtl {
-                margin-right: 480px;
-            }
-
-            .summary table td {
+            .summary-table td {
                 padding: 5px 10px;
+                border-bottom: 1px solid #eee;
             }
 
-            .summary table td:nth-child(2) {
+            .summary-table td:last-child {
+                text-align: right;
+            }
+            
+            .text-right {
+                text-align: right;
+            }
+
+            .text-center {
                 text-align: center;
             }
 
-            .summary table td:nth-child(3) {
-                text-align: right;
+            .align-top {
+                vertical-align: top;
+            }
+
+            /* Clearfix */
+            .clearfix::after {
+                content: "";
+                clear: both;
+                display: table;
             }
         </style>
     </head>
@@ -162,181 +155,118 @@
     <body dir="{{ $locale }}">
         <div class="page">
             <!-- Header -->
-            <div class="page-header">
-                <b>@lang('admin::app.quotes.index.pdf.title')</b>
+            <div class="page-header clearfix">
+                <div class="logo-container" style="float: left;">
+                    @if (core()->getConfigData('general.design.admin_logo.logo_image'))
+                        <img src="{{ Storage::url(core()->getConfigData('general.design.admin_logo.logo_image')) }}" alt="{{ config('app.name') }}"/>
+                    @else
+                        <img src="{{ asset('vendor/webkul/admin/assets/images/logo.png') }}" alt="{{ config('app.name') }}"/>
+                    @endif
+                </div>
+
+                <div class="quote-title">
+                    <b>@lang('admin::app.quotes.index.pdf.title')</b>
+                </div>
             </div>
 
             <div class="page-content">
                 <!-- Invoice Information -->
-                <table class="{{ app()->getLocale   () }}">
+                <table class="table-info">
                     <tbody>
                         <tr>
-                            <td style="width: 50%; padding: 2px 18px;border:none;">
-                                <b>
-                                    @lang('admin::app.quotes.index.pdf.quote-id'): 
-                                </b>
-
-                                <span>
-                                    #{{ $quote->id }}
-                                </span>
+                            <td style="width: 50%;">
+                                <div class="label">@lang('admin::app.quotes.index.pdf.quote-id')</div>
+                                <div class="value">#{{ $quote->id }}</div>
                             </td>
 
-                            <td style="width: 50%; padding: 2px 18px;border:none;">
-                                <b>
-                                    @lang('admin::app.quotes.index.pdf.person'):
-                                </b>
-
-                                <span>
-                                    {{ $quote->person->name }}
-                                </span>
+                            <td style="width: 50%;">
+                                <div class="label">@lang('admin::app.quotes.index.pdf.date')</div>
+                                <div class="value">{{ core()->formatDate($quote->created_at, 'd-m-Y') }}</div>
                             </td>
                         </tr>
 
                         <tr>
-                            <td style="width: 50%; padding: 2px 18px;border:none;">
-                                <b>
-                                    @lang('admin::app.quotes.index.pdf.sales-person'): 
-                                </b>
-
-                                <span>
-                                    {{ $quote->user->name }}
-                                </span>
+                            <td style="width: 50%;">
+                                <div class="label">@lang('admin::app.quotes.index.pdf.subject')</div>
+                                <div class="value">{{ $quote->subject }}</div>
                             </td>
 
-                            <td style="width: 50%; padding: 2px 18px;border:none;">
-                                <b>
-                                    @lang('admin::app.quotes.index.pdf.subject'):
-                                </b>
-
-                                <span>
-                                    {{ $quote->subject }}
-                                </span>
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <td style="width: 50%; padding: 2px 18px;border:none;">
-                                <b>
-                                    @lang('admin::app.quotes.index.pdf.date'):
-                                </b>
-
-                                <span>
-                                    {{ core()->formatDate($quote->created_at, 'd-m-Y') }}
-                                </span>
-                            </td>
-
-                            <td style="width: 50%; padding: 2px 18px;border:none;">
-                                <b>
-                                    @lang('admin::app.quotes.index.pdf.sales-person'):
-                                </b>
-
-                                <span>
-                                    {{ $quote->user->name }}
-                                </span>
+                            <td style="width: 50%;">
+                                <div class="label">@lang('admin::app.quotes.index.pdf.expired-at')</div>
+                                <div class="value">{{ core()->formatDate($quote->expired_at, 'd-m-Y') }}</div>
                             </td>
                         </tr>
 
                         <tr>
-                            <td style="width: 50%; padding: 2px 18px;border:none;">
-                                <b>
-                                    @lang('admin::app.quotes.index.pdf.expired-at'):
-                                </b>
+                            <td style="width: 50%;">
+                                <div class="label">@lang('admin::app.quotes.index.pdf.person')</div>
+                                <div class="value">{{ $quote->person->name }}</div>
+                            </td>
 
-                                <span>
-                                    {{ core()->formatDate($quote->expired_at, 'd-m-Y') }}
-                                </span>
+                            <td style="width: 50%;">
+                                <div class="label">@lang('admin::app.quotes.index.pdf.sales-person')</div>
+                                <div class="value">{{ $quote->user->name }}</div>
                             </td>
                         </tr>
                     </tbody>
                 </table>
 
                 <!-- Billing & Shipping Address -->
-                <table class="{{ $locale }}">
-                    <thead>
-                        <tr>
-                            @if ($quote->billing_address)
-                                <th style="width: 50%;">
-                                    <b>
-                                        @lang('admin::app.quotes.index.pdf.billing-address')
-                                    </b>
-                                </th>
-                            @endif
-
-                            @if ($quote->shipping_address)
-                                <th style="width: 50%">
-                                    <b>
-                                        @lang('admin::app.quotes.index.pdf.shipping-address')
-                                    </b>
-                                </th>
-                            @endif
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <tr>
-                            @if ($quote->billing_address)
-                                <td style="width: 50%">
-                                    <div>{{ $quote->billing_address['address'] ?? '' }}</div>
-
-                                    <div>{{ $quote->billing_address['postcode'] ?? '' . ' ' .$quote->billing_address['city'] ?? '' }} </div>
-
-                                    <div>{{ $quote->billing_address['state'] ?? '' }}</div>
-
-                                    <div>{{ core()->country_name($quote->billing_address['country'] ?? '') }}</div>
-                                </td>
-                            @endif
-                            
-                            @if ($quote->shipping_address)
-                                <td style="width: 50%">
-                                    <div>{{ $quote->shipping_address['address'] ?? ''}}</div>
-
-                                    <div>{{ $quote->shipping_address['postcode'] ?? '' . ' ' .$quote->shipping_address['city'] ?? '' }} </div>
-
-                                    <div>{{ $quote->shipping_address['state'] ?? '' }}</div>
-
-                                    <div>{{ core()->country_name($quote->shipping_address['country'] ?? '') }}</div>
-                                </td>
-                            @endif
-                        </tr>
-                    </tbody>
-                </table>
-
-                <!-- Items -->
-                <div class="items">
-                    <table class="{{ app()->getLocale   () }}">
+                <div style="margin-top: 20px;">
+                    <table class="table-address">
                         <thead>
                             <tr>
-                                <th>
-                                    @lang('admin::app.quotes.index.pdf.sku')
-                                </th>
+                                @if ($quote->billing_address)
+                                    <th style="width: 50%;">
+                                        @lang('admin::app.quotes.index.pdf.billing-address')
+                                    </th>
+                                @endif
 
-                                <th>
-                                    @lang('admin::app.quotes.index.pdf.product-name')
-                                </th>
+                                @if ($quote->shipping_address)
+                                    <th style="width: 50%">
+                                        @lang('admin::app.quotes.index.pdf.shipping-address')
+                                    </th>
+                                @endif
+                            </tr>
+                        </thead>
 
-                                <th>
-                                    @lang('admin::app.quotes.index.pdf.price')
-                                </th>
+                        <tbody>
+                            <tr>
+                                @if ($quote->billing_address)
+                                    <td>
+                                        <div>{{ $quote->billing_address['address'] ?? '' }}</div>
+                                        <div>{{ $quote->billing_address['postcode'] ?? '' . ' ' .$quote->billing_address['city'] ?? '' }} </div>
+                                        <div>{{ $quote->billing_address['state'] ?? '' }}</div>
+                                        <div>{{ core()->country_name($quote->billing_address['country'] ?? '') }}</div>
+                                    </td>
+                                @endif
+                                
+                                @if ($quote->shipping_address)
+                                    <td>
+                                        <div>{{ $quote->shipping_address['address'] ?? ''}}</div>
+                                        <div>{{ $quote->shipping_address['postcode'] ?? '' . ' ' .$quote->shipping_address['city'] ?? '' }} </div>
+                                        <div>{{ $quote->shipping_address['state'] ?? '' }}</div>
+                                        <div>{{ core()->country_name($quote->shipping_address['country'] ?? '') }}</div>
+                                    </td>
+                                @endif
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-                                <th>
-                                    @lang('admin::app.quotes.index.pdf.quantity')
-                                </th>
-
-                                <th>
-                                    @lang('admin::app.quotes.index.pdf.amount')
-                                </th>
-
-                                <th>
-                                    @lang('admin::app.quotes.index.pdf.discount')
-                                </th>
-
-                                <th>
-                                    @lang('admin::app.quotes.index.pdf.tax')
-                                </th>
-
-                                <th>
-                                    @lang('admin::app.quotes.index.pdf.grand-total')
-                                </th>
+                <!-- Items -->
+                <div class="items" style="margin-top: 20px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>@lang('admin::app.quotes.index.pdf.sku')</th>
+                                <th>@lang('admin::app.quotes.index.pdf.product-name')</th>
+                                <th class="text-right">@lang('admin::app.quotes.index.pdf.price')</th>
+                                <th class="text-center">@lang('admin::app.quotes.index.pdf.quantity')</th>
+                                <th class="text-right">@lang('admin::app.quotes.index.pdf.amount')</th>
+                                <th class="text-right">@lang('admin::app.quotes.index.pdf.discount')</th>
+                                <th class="text-right">@lang('admin::app.quotes.index.pdf.tax')</th>
+                                <th class="text-right">@lang('admin::app.quotes.index.pdf.grand-total')</th>
                             </tr>
                         </thead>
 
@@ -344,59 +274,45 @@
                             @foreach ($quote->items as $item)
                                 <tr>
                                     <td>{{ $item->sku }}</td>
-
-                                    <td>
-                                        {{ $item->name }}
-                                    </td>
-
-                                    <td>{!! core()->formatBasePrice($item->price, true) !!}</td>
-
+                                    <td>{{ $item->name }}</td>
+                                    <td class="text-right">{!! core()->formatBasePrice($item->price, true) !!}</td>
                                     <td class="text-center">{{ $item->quantity }}</td>
-
-                                    <td class="text-center">{!! core()->formatBasePrice($item->total, true) !!}</td>
-
-                                    <td class="text-center">{!! core()->formatBasePrice($item->discount_amount, true) !!}</td>
-
-                                    <td class="text-center">{!! core()->formatBasePrice($item->tax_amount, true) !!}</td>
-                                    
-                                    <td class="text-center">{!! core()->formatBasePrice($item->total + $item->tax_amount - $item->discount_amount, true) !!}</td>
+                                    <td class="text-right">{!! core()->formatBasePrice($item->total, true) !!}</td>
+                                    <td class="text-right">{!! core()->formatBasePrice($item->discount_amount, true) !!}</td>
+                                    <td class="text-right">{!! core()->formatBasePrice($item->tax_amount, true) !!}</td>
+                                    <td class="text-right">{!! core()->formatBasePrice($item->total + $item->tax_amount - $item->discount_amount, true) !!}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
 
-               <!-- Summary Table -->
-                <div class="summary">
-                    <table class="{{ app()->getLocale   () }}">
+                <!-- Summary Table -->
+                <div class="summary-container clearfix">
+                    <table class="summary-table">
                         <tbody>
                             <tr>
                                 <td>@lang('admin::app.quotes.index.pdf.sub-total')</td>
-                                <td>-</td>
                                 <td>{!! core()->formatBasePrice($quote->sub_total, true) !!}</td>
                             </tr>
         
                             <tr>
                                 <td>@lang('admin::app.quotes.index.pdf.tax')</td>
-                                <td>-</td>
                                 <td>{!! core()->formatBasePrice($quote->tax_amount, true) !!}</td>
                             </tr>
         
                             <tr>
                                 <td>@lang('admin::app.quotes.index.pdf.discount')</td>
-                                <td>-</td>
                                 <td>{!! core()->formatBasePrice($quote->discount_amount, true) !!}</td>
                             </tr>
         
                             <tr>
                                 <td>@lang('admin::app.quotes.index.pdf.adjustment')</td>
-                                <td>-</td>
                                 <td>{!! core()->formatBasePrice($quote->adjustment_amount, true) !!}</td>
                             </tr>
         
                             <tr>
                                 <td><strong>@lang('admin::app.quotes.index.pdf.grand-total')</strong></td>
-                                <td><strong>-</strong></td>
                                 <td><strong>{!! core()->formatBasePrice($quote->grand_total, true) !!}</strong></td>
                             </tr>
                         </tbody>

@@ -585,14 +585,6 @@
                     };
                 },
 
-                methods: {
-                    /**
-                     * Scroll to the section.
-                     *
-                     * @param {String} tabId
-                     *
-                     * @returns {void}
-                     */
                     scrollToSection(tabId) {
                         const section = document.getElementById(tabId);
 
@@ -600,6 +592,42 @@
                             section.scrollIntoView({ behavior: 'smooth' });
                         }
                     },
+
+                    handleLookupAdded(e) {
+                         const { item, attribute } = e.detail;
+
+                         if (attribute.code === 'person_id') {
+                             this.fetchLastAddress(item.id);
+                         }
+                    },
+
+                    fetchLastAddress(personId) {
+                        this.$root.$emit('show-ajax-loader');
+
+                        const url = "{{ route('admin.quotes.last_address', 'personId') }}".replace('personId', personId);
+
+                        axios.get(url)
+                            .then(response => {
+                                this.$root.$emit('hide-ajax-loader');
+
+                                const billingEvent = new CustomEvent('update-address-billing_address', {
+                                    detail: response.data.billing_address
+                                });
+                                window.dispatchEvent(billingEvent);
+
+                                const shippingEvent = new CustomEvent('update-address-shipping_address', {
+                                    detail: response.data.shipping_address
+                                });
+                                window.dispatchEvent(shippingEvent);
+                            })
+                            .catch(error => {
+                                this.$root.$emit('hide-ajax-loader');
+                            });
+                    }
+                },
+
+                mounted() {
+                    this.$el.addEventListener('lookup-added-event', this.handleLookupAdded);
                 },
             });
 
