@@ -585,6 +585,7 @@
                     };
                 },
 
+                methods: {
                     scrollToSection(tabId) {
                         const section = document.getElementById(tabId);
 
