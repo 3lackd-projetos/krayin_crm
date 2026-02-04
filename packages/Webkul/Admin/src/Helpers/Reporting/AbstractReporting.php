@@ -57,7 +57,7 @@ abstract class AbstractReporting
      */
     public function applyPermissionScope($query, $column = 'user_id')
     {
-        $user = auth()->guard('admin')->user() ?? auth()->user();
+        $user = auth()->user();
 
         if (!$user) {
             return;
