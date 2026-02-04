@@ -3,6 +3,7 @@
 namespace Webkul\Lead\Services;
 
 use Exception;
+use Illuminate\Support\Facades\Http;
 use Smalot\PdfParser\Parser;
 
 class MagicAIService
@@ -11,6 +12,11 @@ class MagicAIService
      * API endpoint for OpenRouter AI service.
      */
     const OPEN_ROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+    /**
+     * API endpoint for Google Gemini service.
+     */
+    const GOOGLE_GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s';
 
     /**
      * Maximum token limit for AI prompt.
@@ -120,6 +126,14 @@ class MagicAIService
             return !empty($value);
         });
 
+        // Check if using Google Direct API (Key starts with AIza)
+        if (str_starts_with($apiKey, 'AIza')) {
+            // Remove 'google/' prefix if present for Direct API
+            $model = str_replace('google/', '', $model);
+
+            return self::askGemini(array_values($prompt), $model, $apiKey);
+        }
+
         return self::ask(array_values($prompt), $model, $apiKey);
     }
 
@@ -178,6 +192,85 @@ class MagicAIService
             }
 
             return $data;
+        } catch (Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Send prompt request to Google Gemini API.
+     */
+    private static function askGemini($prompt, $model, $apiKey)
+    {
+        try {
+            $url = sprintf(self::GOOGLE_GEMINI_URL, $model, $apiKey);
+
+            $contents = [];
+
+            // System instruction (Context)
+            $systemPrompt = self::getSystemPrompt();
+
+            // Combine system prompt and user prompt for Gemini 
+            // (Simpler than using system_instruction which varies by model version)
+            $fullPromptText = $systemPrompt . "\n\n" . "--- USER DATA ---" . "\n\n" . $prompt[0];
+
+            $parts = [
+                ['text' => $fullPromptText]
+            ];
+
+            // Handle images if present (assuming base64 in prompt array starting index 1)
+            // Note: $prompt passed here is array_values($prompt) from processPromptWithAI
+            // Index 0 is text. Subsequent indices are images.
+            for ($i = 1; $i < count($prompt); $i++) {
+                if (!empty($prompt[$i])) {
+                    $parts[] = [
+                        'inline_data' => [
+                            'mime_type' => 'image/jpeg', // Assuming JPEG for simplicity or detect mime
+                            'data' => $prompt[$i]
+                        ]
+                    ];
+                }
+            }
+
+            $payload = [
+                'contents' => [
+                    [
+                        'parts' => $parts
+                    ]
+                ],
+                'generationConfig' => [
+                    'responseMimeType' => 'application/json'
+                ]
+            ];
+
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post($url, $payload);
+
+            if ($response->failed()) {
+                throw new Exception($response->body());
+            }
+
+            $data = $response->json();
+
+            if (isset($data['error'])) {
+                throw new Exception($data['error']['message']);
+            }
+
+            // Extract text from Gemini response structure
+            $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+
+            // Format to match OpenRouter/OpenAI choices structure for mapAIDataToLead compatibility
+            return [
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => $text
+                        ]
+                    ]
+                ]
+            ];
+
         } catch (Exception $e) {
             return ['error' => $e->getMessage()];
         }
