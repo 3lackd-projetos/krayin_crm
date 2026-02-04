@@ -46,11 +46,33 @@ abstract class AbstractReporting
         $this->setStartDate(request()->date('start'));
 
         $this->setEndDate(request()->date('end'));
+    }
 
-        if (auth()->user()->view_permission == 'individual') {
-            $this->userId = auth()->user()->id;
+    /**
+     * Apply permission scope to the query.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  string  $column
+     * @return void
+     */
+    public function applyPermissionScope($query, $column = 'user_id')
+    {
+        $user = auth()->guard('admin')->user() ?? auth()->user();
+
+        if (!$user) {
+            return;
+        }
+
+        if ($user->view_permission == 'individual') {
+            $query->where($column, $user->id);
         } else {
-            $this->userId = request('user_id');
+            if ($requestedUserId = request('user_id')) {
+                $query->where($column, $requestedUserId);
+            } elseif ($user->view_permission == 'group') {
+                $userIds = app(\Webkul\User\Repositories\UserRepository::class)->getCurrentUserGroupsUserIds();
+
+                $query->whereIn($column, $userIds);
+            }
         }
     }
 

@@ -391,6 +391,8 @@ class Lead extends AbstractReporting
             ->groupBy(DB::raw($groupColumn))
             ->orderBy(DB::raw($groupColumn));
 
+        $this->applyPermissionScope($query);
+
         $results = $query->get();
         $resultLookup = $results->keyBy('date');
 
