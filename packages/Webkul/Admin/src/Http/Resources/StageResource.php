@@ -22,7 +22,7 @@ class StageResource extends JsonResource
             'formatted_lead_value' => core()->formatBasePrice($this->lead_value),
             'is_user_defined' => $this->is_user_defined,
             'sort_order' => $this->sort_order,
-            'color' => $this->color,
+            'color' => $this->color ?? '#000000',
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

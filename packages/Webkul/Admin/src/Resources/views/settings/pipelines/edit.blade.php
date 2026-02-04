@@ -176,18 +176,19 @@
                                                 {!! view_render_event('admin.settings.pipelines.edit.form.stages.name.after', ['pipeline' => $pipeline]) !!}
 
                                             <!-- Stage Color -->
-                                            <x-admin::form.control-group>
-                                                <x-admin::form.control-group.label>
-                                                    @lang('admin::app.settings.types.index.create.color')
-                                                </x-admin::form.control-group.label>
-
-                                                <x-admin::form.control-group.control
-                                                    type="color"
-                                                    ::name="'stages[' + element.id + '][color]'"
-                                                    v-model="element['color']"
-                                                    label="{{ trans('admin::app.settings.pipelines.create.color') ?? 'Color' }}"
-                                                />
-                                            </x-admin::form.control-group>
+                                            <div class="flex flex-col gap-1.5">
+                                                <label class="mb-1.5 flex items-center gap-1 text-sm font-normal text-gray-800 dark:text-white">
+                                                    Selecione a cor do card
+                                                </label>
+                                                <div class="flex">
+                                                    <input
+                                                        type="color"
+                                                        :name="'stages[' + element.id + '][color]'"
+                                                        v-model="element['color']"
+                                                        class="h-10 w-full appearance-none rounded-md border border-gray-200 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:text-gray-300 dark:hover:border-gray-400 cursor-pointer"
+                                                    />
+                                                </div>
+                                            </div>
 
                                             {!! view_render_event('admin.settings.pipelines.edit.form.stages.probability.before', ['pipeline' => $pipeline]) !!}
 
