@@ -281,13 +281,14 @@
 
                     methods: {
                         addStage() {
-                            'id': 'stage_' + this.stageCount++,
+                            this.stages.splice((this.stages.length - 2), 0, {
+                                'id': 'stage_' + this.stageCount++,
                                 'code': '',
-                                    'name': '',
-                                        'probability': 100,
-                                            'color': '#000000',
-                                });
-                            },
+                                'name': '',
+                                'probability': 100,
+                                'color': '#000000',
+                            });
+                        },
 
                 remove(stage) {
                     this.$emitter.emit('open-confirm-modal', {
