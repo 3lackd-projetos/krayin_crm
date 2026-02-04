@@ -253,8 +253,8 @@ return [
                         'value' => 'google/gemini-1.5-pro',
                     ],
                     [
-                        'title' => 'Gemini 2.0 Flash (Experimental)',
-                        'value' => 'google/gemini-2.0-flash-exp',
+                        'title' => 'Gemini 2.0 Flash',
+                        'value' => 'google/gemini-2.0-flash',
                     ],
                     [
                         'title' => 'admin::app.configuration.index.magic-ai.settings.models.deepseek-r1',
