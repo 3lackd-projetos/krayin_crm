@@ -67,7 +67,11 @@ abstract class AbstractReporting
             $query->where($column, $user->id);
         } else {
             if ($requestedUserId = request('user_id')) {
-                $query->where($column, $requestedUserId);
+                if (is_array($requestedUserId)) {
+                    $query->whereIn($column, $requestedUserId);
+                } else {
+                    $query->where($column, $requestedUserId);
+                }
             } elseif ($user->view_permission == 'group') {
                 $userIds = app(\Webkul\User\Repositories\UserRepository::class)->getCurrentUserGroupsUserIds();
 

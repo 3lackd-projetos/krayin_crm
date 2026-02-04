@@ -91,17 +91,45 @@
             <script type="text/x-template" id="v-dashboard-filters-template">
                 {!! view_render_event('admin.dashboard.index.date_filters.before') !!}
 
-                <div class="flex gap-1.5">
+                <div class="flex gap-1.5 relative" ref="userDropdown">
                     @if (!empty($users) && $users->isNotEmpty())
-                        <select
-                            class="flex min-h-[39px] w-[140px] rounded-md border text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400"
-                            v-model="filters.user_id"
+                        <script>
+                            window.dashboardUsers = @json($users);
+                        </script>
+
+                        <!-- Custom Dropdown Trigger -->
+                        <button
+                            type="button"
+                            class="flex min-h-[39px] w-[140px] items-center justify-between rounded-md border px-3 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400"
+                            @click="toggleUserDropdown"
                         >
-                            <option value="" selected>@lang('All Users')</option>
-                            @foreach ($users as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }}</option>
-                            @endforeach
-                        </select>
+                            <span class="truncate">@{{ selectedUsersLabel }}</span>
+                            <span class="icon-arrow-down text-2xl"></span>
+                        </button>
+
+                        <!-- Dropdown Content -->
+                        <div
+                            v-if="showUserDropdown"
+                            class="absolute top-full z-10 mt-1 w-[200px] rounded-md border bg-white shadow-lg dark:border-gray-800 dark:bg-gray-900"
+                        >
+                            <div class="max-h-[300px] overflow-y-auto p-2">
+                                <div class="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-950 rounded cursor-pointer" @click="filters.user_id = []">
+                                    <div class="h-4 w-4 rounded border border-gray-300 dark:border-gray-600 flex items-center justify-center p-0.5" :class="{'bg-brandColor border-brandColor': filters.user_id.length === 0}">
+                                        <span v-if="filters.user_id.length === 0" class="icon-check text-white text-[10px] font-bold"></span>
+                                    </div>
+                                    <span class="text-sm text-gray-600 dark:text-gray-300">@lang('All Users')</span>
+                                </div>
+
+                                @foreach ($users as $user)
+                                    <div class="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-950 rounded cursor-pointer" @click="toggleUser({{ $user->id }})">
+                                        <div class="h-4 w-4 rounded border border-gray-300 dark:border-gray-600 flex items-center justify-center p-0.5" :class="{'bg-brandColor border-brandColor': filters.user_id.includes({{ $user->id }})}">
+                                            <span v-if="filters.user_id.includes({{ $user->id }})" class="icon-check text-white text-[10px] font-bold"></span>
+                                        </div>
+                                        <span class="text-sm text-gray-600 dark:text-gray-300">{{ $user->name }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
                     @endif
 
                     <x-admin::flat-picker.date
@@ -139,11 +167,61 @@
                     data() {
                         return {
                             filters: {
-                                user_id: "",
-
+                                user_id: [],
                                 start: "{{ $startDate->format('Y-m-d') }}",
-
                                 end: "{{ $endDate->format('Y-m-d') }}",
+                            },
+                            showUserDropdown: false,
+                        }
+                    },
+
+                    computed: {
+                        selectedUsersLabel() {
+                            if (!this.filters.user_id || this.filters.user_id.length === 0) {
+                                return "@lang('All Users')";
+                            }
+                            
+                            if (this.filters.user_id.length === 1) {
+                                // Find user name
+                                // passing users via prop or global var? 
+                                // users is not available in vue data yet unless we pass it.
+                                // simpler: "1 Selected"
+                                const userId = this.filters.user_id[0];
+                                const user = window.dashboardUsers ? window.dashboardUsers.find(u => u.id == userId) : null;
+                                return user ? user.name : '1 User';
+                            }
+
+                            return this.filters.user_id.length + " Users";
+                        }
+                    },
+
+                    mounted() {
+                         // Close dropdown on click outside
+                        document.addEventListener('click', this.handleClickOutside);
+                    },
+
+                    unmounted() {
+                        document.removeEventListener('click', this.handleClickOutside);
+                    },
+
+                    methods: {
+                        toggleUserDropdown() {
+                            this.showUserDropdown = !this.showUserDropdown;
+                        },
+
+                        handleClickOutside(event) {
+                            const dropdown = this.$refs.userDropdown;
+                            if (dropdown && !dropdown.contains(event.target)) {
+                                this.showUserDropdown = false;
+                            }
+                        },
+                        
+                        toggleUser(userId) {
+                            const index = this.filters.user_id.indexOf(userId);
+                            if (index > -1) {
+                                this.filters.user_id.splice(index, 1);
+                            } else {
+                                this.filters.user_id.push(userId);
                             }
                         }
                     },
