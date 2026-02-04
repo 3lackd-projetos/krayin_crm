@@ -55,7 +55,7 @@ class MagicAIService
     {
         if (
             empty($base64File)
-            || ! base64_decode($base64File, true)
+            || !base64_decode($base64File, true)
         ) {
             throw new Exception(trans('admin::app.leads.file.invalid-base64'));
         }
@@ -108,7 +108,7 @@ class MagicAIService
 
         $apiKey = core()->getConfigData('general.magic_ai.settings.api_key');
 
-        if (! $apiKey || ! $model) {
+        if (!$apiKey || !$model) {
             return ['error' => trans('admin::app.leads.file.missing-api-key')];
         }
 
@@ -117,7 +117,7 @@ class MagicAIService
         $promptImages = $prompt['images'] ?? [];
 
         $prompt = array_filter(array_merge([$promptText], $promptImages), function ($value) {
-            return ! empty($value);
+            return !empty($value);
         });
 
         return self::ask(array_values($prompt), $model, $apiKey);
@@ -133,7 +133,7 @@ class MagicAIService
 
             $end = mb_substr($prompt, -self::MAX_TOKENS * 0.4);
 
-            return $start."\n...\n".$end;
+            return $start . "\n...\n" . $end;
         }
 
         return $prompt;
@@ -146,25 +146,26 @@ class MagicAIService
     {
         try {
             $response = \Http::withHeaders([
-                'Content-Type'  => 'application/json',
-                'Authorization' => 'Bearer '.$apiKey,
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $apiKey,
             ])->post(self::OPEN_ROUTER_URL, [
-                'model'    => $model,
-                'messages' => [
-                    [
-                        'role'    => 'system',
-                        'content' => self::getSystemPrompt(),
-                    ], [
-                        'role'    => 'user',
-                        'content' => [
+                        'model' => $model,
+                        'messages' => [
                             [
-                                'type' => 'text',
-                                'text' => $prompt[0],
+                                'role' => 'system',
+                                'content' => self::getSystemPrompt(),
+                            ],
+                            [
+                                'role' => 'user',
+                                'content' => [
+                                    [
+                                        'type' => 'text',
+                                        'text' => $prompt[0],
+                                    ],
+                                ],
                             ],
                         ],
-                    ],
-                ],
-            ]);
+                    ]);
 
             if ($response->failed()) {
                 throw new Exception($response->body());
@@ -178,7 +179,7 @@ class MagicAIService
 
             return $data;
         } catch (Exception $e) {
-            return ['error' => trans('admin::app.leads.file.insufficient-info')];
+            return ['error' => $e->getMessage()];
         }
     }
 
