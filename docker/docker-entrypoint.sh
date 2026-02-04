@@ -15,6 +15,8 @@ set_env_var() {
 
 # Ensure .env exists
 [ ! -f .env ] && touch .env
+# Ensure .env ends with a newline to prevent concatenation errors
+echo "" >> .env
 
 echo "Syncing environment variables to .env..."
 set_env_var "APP_NAME" "$APP_NAME"
@@ -53,6 +55,8 @@ set_env_var "LOG_CHANNEL" "$LOG_CHANNEL"
 set_env_var "LOG_LEVEL" "$LOG_LEVEL"
 set_env_var "SESSION_DRIVER" "$SESSION_DRIVER"
 set_env_var "SESSION_LIFETIME" "$SESSION_LIFETIME"
+set_env_var "SESSION_SECURE_COOKIE" "$SESSION_SECURE_COOKIE"
+set_env_var "SESSION_SAME_SITE_COOKIE" "$SESSION_SAME_SITE_COOKIE"
 
 # Permissions
 echo "Setting permissions..."
