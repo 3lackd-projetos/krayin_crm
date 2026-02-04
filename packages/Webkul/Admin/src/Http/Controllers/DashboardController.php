@@ -12,13 +12,13 @@ class DashboardController extends Controller
      * @var array
      */
     protected $typeFunctions = [
-        'over-all'             => 'getOverAllStats',
-        'revenue-stats'        => 'getRevenueStats',
-        'total-leads'          => 'getTotalLeadsStats',
-        'revenue-by-sources'   => 'getLeadsStatsBySources',
-        'revenue-by-types'     => 'getLeadsStatsByTypes',
+        'over-all' => 'getOverAllStats',
+        'revenue-stats' => 'getRevenueStats',
+        'total-leads' => 'getTotalLeadsStats',
+        'revenue-by-sources' => 'getLeadsStatsBySources',
+        'revenue-by-types' => 'getLeadsStatsByTypes',
         'top-selling-products' => 'getTopSellingProducts',
-        'top-persons'          => 'getTopPersons',
+        'top-persons' => 'getTopPersons',
         'open-leads-by-states' => 'getOpenLeadsByStates',
     ];
 
@@ -27,7 +27,9 @@ class DashboardController extends Controller
      *
      * @return void
      */
-    public function __construct(protected Dashboard $dashboardHelper) {}
+    public function __construct(protected Dashboard $dashboardHelper)
+    {
+    }
 
     /**
      * Display a listing of the resource.
@@ -36,9 +38,18 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        $user = auth()->user();
+
+        $users = match ($user->view_permission) {
+            'global', 'all' => app(\Webkul\User\Repositories\UserRepository::class)->all(),
+            'group' => app(\Webkul\User\Repositories\UserRepository::class)->findWhereIn('id', app(\Webkul\User\Repositories\UserRepository::class)->getCurrentUserGroupsUserIds()),
+            default => [],
+        };
+
         return view('admin::dashboard.index')->with([
             'startDate' => $this->dashboardHelper->getStartDate(),
-            'endDate'   => $this->dashboardHelper->getEndDate(),
+            'endDate' => $this->dashboardHelper->getEndDate(),
+            'users' => $users,
         ]);
     }
 

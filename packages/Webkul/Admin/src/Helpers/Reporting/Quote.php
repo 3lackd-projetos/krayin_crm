@@ -23,7 +23,7 @@ class Quote extends AbstractReporting
     {
         return [
             'previous' => $previous = $this->getTotalQuotes($this->lastStartDate, $this->lastEndDate),
-            'current'  => $current = $this->getTotalQuotes($this->startDate, $this->endDate),
+            'current' => $current = $this->getTotalQuotes($this->startDate, $this->endDate),
             'progress' => $this->getPercentageChange($previous, $current),
         ];
     }
@@ -36,9 +36,12 @@ class Quote extends AbstractReporting
      */
     public function getTotalQuotes($startDate, $endDate): int
     {
-        return $this->quoteRepository
+        $query = $this->quoteRepository
             ->resetModel()
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->count();
+            ->whereBetween('created_at', [$startDate, $endDate]);
+
+        $this->applyPermissionScope($query);
+
+        return $query->count();
     }
 }

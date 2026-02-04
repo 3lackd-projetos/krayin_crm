@@ -122,7 +122,7 @@ class Lead extends AbstractReporting
     {
         return [
             'previous' => $previous = $this->getTotalLeads($this->lastStartDate, $this->lastEndDate),
-            'current'  => $current = $this->getTotalLeads($this->startDate, $this->endDate),
+            'current' => $current = $this->getTotalLeads($this->startDate, $this->endDate),
             'progress' => $this->getPercentageChange($previous, $current),
         ];
     }
@@ -135,10 +135,13 @@ class Lead extends AbstractReporting
      */
     public function getTotalLeads($startDate, $endDate): int
     {
-        return $this->leadRepository
+        $query = $this->leadRepository
             ->resetModel()
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->count();
+            ->whereBetween('created_at', [$startDate, $endDate]);
+
+        $this->applyPermissionScope($query);
+
+        return $query->count();
     }
 
     /**
@@ -148,7 +151,7 @@ class Lead extends AbstractReporting
     {
         return [
             'previous' => $previous = $this->getAverageLeadsPerDay($this->lastStartDate, $this->lastEndDate),
-            'current'  => $current = $this->getAverageLeadsPerDay($this->startDate, $this->endDate),
+            'current' => $current = $this->getAverageLeadsPerDay($this->startDate, $this->endDate),
             'progress' => $this->getPercentageChange($previous, $current),
         ];
     }
@@ -176,10 +179,10 @@ class Lead extends AbstractReporting
     public function getTotalLeadValueProgress(): array
     {
         return [
-            'previous'        => $previous = $this->getTotalLeadValue($this->lastStartDate, $this->lastEndDate),
-            'current'         => $current = $this->getTotalLeadValue($this->startDate, $this->endDate),
+            'previous' => $previous = $this->getTotalLeadValue($this->lastStartDate, $this->lastEndDate),
+            'current' => $current = $this->getTotalLeadValue($this->startDate, $this->endDate),
             'formatted_total' => core()->formatBasePrice($current),
-            'progress'        => $this->getPercentageChange($previous, $current),
+            'progress' => $this->getPercentageChange($previous, $current),
         ];
     }
 
@@ -191,10 +194,13 @@ class Lead extends AbstractReporting
      */
     public function getTotalLeadValue($startDate, $endDate): float
     {
-        return $this->leadRepository
+        $query = $this->leadRepository
             ->resetModel()
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('lead_value');
+            ->whereBetween('created_at', [$startDate, $endDate]);
+
+        $this->applyPermissionScope($query);
+
+        return $query->sum('lead_value');
     }
 
     /**
@@ -203,10 +209,10 @@ class Lead extends AbstractReporting
     public function getAverageLeadValueProgress(): array
     {
         return [
-            'previous'        => $previous = $this->getAverageLeadValue($this->lastStartDate, $this->lastEndDate),
-            'current'         => $current = $this->getAverageLeadValue($this->startDate, $this->endDate),
+            'previous' => $previous = $this->getAverageLeadValue($this->lastStartDate, $this->lastEndDate),
+            'current' => $current = $this->getAverageLeadValue($this->startDate, $this->endDate),
             'formatted_total' => core()->formatBasePrice($current),
-            'progress'        => $this->getPercentageChange($previous, $current),
+            'progress' => $this->getPercentageChange($previous, $current),
         ];
     }
 
@@ -218,10 +224,13 @@ class Lead extends AbstractReporting
      */
     public function getAverageLeadValue($startDate, $endDate): float
     {
-        return $this->leadRepository
+        $query = $this->leadRepository
             ->resetModel()
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->avg('lead_value') ?? 0;
+            ->whereBetween('created_at', [$startDate, $endDate]);
+
+        $this->applyPermissionScope($query);
+
+        return $query->avg('lead_value') ?? 0;
     }
 
     /**
@@ -230,10 +239,10 @@ class Lead extends AbstractReporting
     public function getTotalWonLeadValueProgress(): array
     {
         return [
-            'previous'        => $previous = $this->getTotalWonLeadValue($this->lastStartDate, $this->lastEndDate),
-            'current'         => $current = $this->getTotalWonLeadValue($this->startDate, $this->endDate),
+            'previous' => $previous = $this->getTotalWonLeadValue($this->lastStartDate, $this->lastEndDate),
+            'current' => $current = $this->getTotalWonLeadValue($this->startDate, $this->endDate),
             'formatted_total' => core()->formatBasePrice($current),
-            'progress'        => $this->getPercentageChange($previous, $current),
+            'progress' => $this->getPercentageChange($previous, $current),
         ];
     }
 
@@ -246,11 +255,14 @@ class Lead extends AbstractReporting
      */
     public function getTotalWonLeadValue($startDate, $endDate): ?float
     {
-        return $this->leadRepository
+        $query = $this->leadRepository
             ->resetModel()
             ->whereIn('lead_pipeline_stage_id', $this->wonStageIds)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('lead_value');
+            ->whereBetween('created_at', [$startDate, $endDate]);
+
+        $this->applyPermissionScope($query);
+
+        return $query->sum('lead_value');
     }
 
     /**
@@ -259,10 +271,10 @@ class Lead extends AbstractReporting
     public function getTotalLostLeadValueProgress(): array
     {
         return [
-            'previous'        => $previous = $this->getTotalLostLeadValue($this->lastStartDate, $this->lastEndDate),
-            'current'         => $current = $this->getTotalLostLeadValue($this->startDate, $this->endDate),
+            'previous' => $previous = $this->getTotalLostLeadValue($this->lastStartDate, $this->lastEndDate),
+            'current' => $current = $this->getTotalLostLeadValue($this->startDate, $this->endDate),
             'formatted_total' => core()->formatBasePrice($current),
-            'progress'        => $this->getPercentageChange($previous, $current),
+            'progress' => $this->getPercentageChange($previous, $current),
         ];
     }
 
@@ -275,11 +287,14 @@ class Lead extends AbstractReporting
      */
     public function getTotalLostLeadValue($startDate, $endDate): ?float
     {
-        return $this->leadRepository
+        $query = $this->leadRepository
             ->resetModel()
             ->whereIn('lead_pipeline_stage_id', $this->lostStageIds)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('lead_value');
+            ->whereBetween('created_at', [$startDate, $endDate]);
+
+        $this->applyPermissionScope($query);
+
+        return $query->sum('lead_value');
     }
 
     /**
@@ -287,7 +302,7 @@ class Lead extends AbstractReporting
      */
     public function getTotalWonLeadValueBySources()
     {
-        return $this->leadRepository
+        $query = $this->leadRepository
             ->resetModel()
             ->select(
                 'lead_sources.name',
@@ -296,8 +311,11 @@ class Lead extends AbstractReporting
             ->leftJoin('lead_sources', 'leads.lead_source_id', '=', 'lead_sources.id')
             ->whereIn('lead_pipeline_stage_id', $this->wonStageIds)
             ->whereBetween('leads.created_at', [$this->startDate, $this->endDate])
-            ->groupBy('lead_source_id')
-            ->get();
+            ->groupBy('lead_source_id');
+
+        $this->applyPermissionScope($query);
+
+        return $query->get();
     }
 
     /**
@@ -305,7 +323,7 @@ class Lead extends AbstractReporting
      */
     public function getTotalWonLeadValueByTypes()
     {
-        return $this->leadRepository
+        $query = $this->leadRepository
             ->resetModel()
             ->select(
                 'lead_types.name',
@@ -314,8 +332,11 @@ class Lead extends AbstractReporting
             ->leftJoin('lead_types', 'leads.lead_type_id', '=', 'lead_types.id')
             ->whereIn('lead_pipeline_stage_id', $this->wonStageIds)
             ->whereBetween('leads.created_at', [$this->startDate, $this->endDate])
-            ->groupBy('lead_type_id')
-            ->get();
+            ->groupBy('lead_type_id');
+
+        $this->applyPermissionScope($query);
+
+        return $query->get();
     }
 
     /**
@@ -323,7 +344,7 @@ class Lead extends AbstractReporting
      */
     public function getOpenLeadsByStates()
     {
-        return $this->leadRepository
+        $query = $this->leadRepository
             ->resetModel()
             ->select(
                 'lead_pipeline_stages.name',
@@ -334,8 +355,11 @@ class Lead extends AbstractReporting
             ->whereNotIn('lead_pipeline_stage_id', $this->lostStageIds)
             ->whereBetween('leads.created_at', [$this->startDate, $this->endDate])
             ->groupBy('lead_pipeline_stage_id')
-            ->orderByDesc('total')
-            ->get();
+            ->orderByDesc('total');
+
+        $this->applyPermissionScope($query);
+
+        return $query->get();
     }
 
     /**
@@ -360,7 +384,7 @@ class Lead extends AbstractReporting
             ->select(
                 DB::raw("$groupColumn AS date"),
                 DB::raw('COUNT(DISTINCT id) AS count'),
-                DB::raw('SUM('.\DB::getTablePrefix()."$valueColumn) AS total")
+                DB::raw('SUM(' . \DB::getTablePrefix() . "$valueColumn) AS total")
             )
             ->whereIn('lead_pipeline_stage_id', $this->stageIds)
             ->whereBetween($dateColumn, [$startDate, $endDate])
@@ -395,7 +419,7 @@ class Lead extends AbstractReporting
 
         while ($current <= $endDate) {
             $interval = [
-                'key'   => $this->formatDateForGrouping($current, $period),
+                'key' => $this->formatDateForGrouping($current, $period),
                 'label' => $this->formatDateForLabel($current, $period),
             ];
 
@@ -471,7 +495,7 @@ class Lead extends AbstractReporting
             case 'day':
                 return $date->format('M d');
             case 'week':
-                return 'Week '.$date->format('W, Y');
+                return 'Week ' . $date->format('W, Y');
             case 'month':
                 return $date->format('M Y');
             case 'year':

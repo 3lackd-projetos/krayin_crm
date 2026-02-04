@@ -26,7 +26,15 @@ abstract class AbstractReporting
     /**
      * The ending date for the previous period.
      */
+    /**
+     * The ending date for the previous period.
+     */
     protected Carbon $lastEndDate;
+
+    /**
+     * User ID filter.
+     */
+    protected $userId;
 
     /**
      * Create a helper instance.
@@ -38,6 +46,12 @@ abstract class AbstractReporting
         $this->setStartDate(request()->date('start'));
 
         $this->setEndDate(request()->date('end'));
+
+        if (auth()->user()->view_permission == 'individual') {
+            $this->userId = auth()->user()->id;
+        } else {
+            $this->userId = request('user_id');
+        }
     }
 
     /**
@@ -96,11 +110,11 @@ abstract class AbstractReporting
      */
     private function setLastStartDate(): void
     {
-        if (! isset($this->startDate)) {
+        if (!isset($this->startDate)) {
             $this->setStartDate(request()->date('start'));
         }
 
-        if (! isset($this->endDate)) {
+        if (!isset($this->endDate)) {
             $this->setEndDate(request()->date('end'));
         }
 
@@ -143,7 +157,7 @@ abstract class AbstractReporting
      */
     public function getPercentageChange($previous, $current): float|int
     {
-        if (! $previous) {
+        if (!$previous) {
             return $current ? 100 : 0;
         }
 
@@ -168,10 +182,10 @@ abstract class AbstractReporting
              */
             $intervals = $this->getMonthsInterval($startDate, $endDate);
 
-            if (! empty($intervals)) {
+            if (!empty($intervals)) {
                 return [
                     'group_column' => "MONTH($dateColumn)",
-                    'intervals'    => $intervals,
+                    'intervals' => $intervals,
                 ];
             }
 
@@ -180,10 +194,10 @@ abstract class AbstractReporting
              */
             $intervals = $this->getWeeksInterval($startDate, $endDate);
 
-            if (! empty($intervals)) {
+            if (!empty($intervals)) {
                 return [
                     'group_column' => "WEEK($dateColumn)",
-                    'intervals'    => $intervals,
+                    'intervals' => $intervals,
                 ];
             }
 
@@ -192,7 +206,7 @@ abstract class AbstractReporting
              */
             return [
                 'group_column' => "DAYOFYEAR($dateColumn)",
-                'intervals'    => $this->getDaysInterval($startDate, $endDate),
+                'intervals' => $this->getDaysInterval($startDate, $endDate),
             ];
         } else {
             $datePeriod = CarbonPeriod::create($this->startDate, "1 $period", $this->endDate);
@@ -205,7 +219,7 @@ abstract class AbstractReporting
                 $formatter = '?-?-?';
             }
 
-            $groupColumn = 'DATE_FORMAT('.$dateColumn.', "'.Str::replaceArray('?', ['%Y', '%m', '%d'], $formatter).'")';
+            $groupColumn = 'DATE_FORMAT(' . $dateColumn . ', "' . Str::replaceArray('?', ['%Y', '%m', '%d'], $formatter) . '")';
 
             $intervals = [];
 
@@ -214,13 +228,13 @@ abstract class AbstractReporting
 
                 $intervals[] = [
                     'filter' => $formattedDate,
-                    'start'  => $formattedDate,
+                    'start' => $formattedDate,
                 ];
             }
 
             return [
                 'group_column' => $groupColumn,
-                'intervals'    => $intervals,
+                'intervals' => $intervals,
             ];
         }
     }
@@ -258,8 +272,8 @@ abstract class AbstractReporting
 
             $intervals[] = [
                 'filter' => $start->month,
-                'start'  => $start->format('d M'),
-                'end'    => $end->format('d M'),
+                'start' => $start->format('d M'),
+                'end' => $end->format('d M'),
             ];
         }
 
@@ -277,9 +291,9 @@ abstract class AbstractReporting
     {
         $intervals = [];
 
-        $startWeekDay = Carbon::createFromTimeString(core()->xWeekRange($startDate, 0).' 00:00:01');
+        $startWeekDay = Carbon::createFromTimeString(core()->xWeekRange($startDate, 0) . ' 00:00:01');
 
-        $endWeekDay = Carbon::createFromTimeString(core()->xWeekRange($endDate, 1).' 23:59:59');
+        $endWeekDay = Carbon::createFromTimeString(core()->xWeekRange($endDate, 1) . ' 23:59:59');
 
         $totalWeeks = $startWeekDay->diffInWeeks($endWeekDay);
 
@@ -297,16 +311,16 @@ abstract class AbstractReporting
 
             $start = $i == 0
                 ? $startDate
-                : Carbon::createFromTimeString(core()->xWeekRange($intervalStartDate, 0).' 00:00:01');
+                : Carbon::createFromTimeString(core()->xWeekRange($intervalStartDate, 0) . ' 00:00:01');
 
             $end = ($totalWeeks - 1 == $i)
                 ? $endDate
-                : Carbon::createFromTimeString(core()->xWeekRange($intervalStartDate->subDay(), 1).' 23:59:59');
+                : Carbon::createFromTimeString(core()->xWeekRange($intervalStartDate->subDay(), 1) . ' 23:59:59');
 
             $intervals[] = [
                 'filter' => $start->week,
-                'start'  => $start->format('d M'),
-                'end'    => $end->format('d M'),
+                'start' => $start->format('d M'),
+                'end' => $end->format('d M'),
             ];
         }
 
@@ -333,8 +347,8 @@ abstract class AbstractReporting
 
             $intervals[] = [
                 'filter' => $intervalStartDate->dayOfYear,
-                'start'  => $intervalStartDate->startOfDay()->format('d M'),
-                'end'    => $intervalStartDate->endOfDay()->format('d M'),
+                'start' => $intervalStartDate->startOfDay()->format('d M'),
+                'end' => $intervalStartDate->endOfDay()->format('d M'),
             ];
         }
 

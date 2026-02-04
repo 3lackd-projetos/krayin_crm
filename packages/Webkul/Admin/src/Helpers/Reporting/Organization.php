@@ -25,7 +25,7 @@ class Organization extends AbstractReporting
     {
         return [
             'previous' => $previous = $this->getTotalOrganizations($this->lastStartDate, $this->lastEndDate),
-            'current'  => $current = $this->getTotalOrganizations($this->startDate, $this->endDate),
+            'current' => $current = $this->getTotalOrganizations($this->startDate, $this->endDate),
             'progress' => $this->getPercentageChange($previous, $current),
         ];
     }
@@ -38,10 +38,13 @@ class Organization extends AbstractReporting
      */
     public function getTotalOrganizations($startDate, $endDate): int
     {
-        return $this->organizationRepository
+        $query = $this->organizationRepository
             ->resetModel()
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->count();
+            ->whereBetween('created_at', [$startDate, $endDate]);
+
+        $this->applyPermissionScope($query);
+
+        return $query->count();
     }
 
     /**
@@ -58,19 +61,22 @@ class Organization extends AbstractReporting
             ->leftJoin('persons', 'organizations.id', '=', 'persons.organization_id')
             ->leftJoin('leads', 'persons.id', '=', 'leads.person_id')
             ->select('*', 'persons.id as id')
-            ->addSelect(DB::raw('SUM('.$tablePrefix.'leads.lead_value) as revenue'))
+            ->addSelect(DB::raw('SUM(' . $tablePrefix . 'leads.lead_value) as revenue'))
             ->whereBetween('leads.closed_at', [$this->startDate, $this->endDate])
-            ->having(DB::raw('SUM('.$tablePrefix.'leads.lead_value)'), '>', 0)
+            ->having(DB::raw('SUM(' . $tablePrefix . 'leads.lead_value)'), '>', 0)
             ->groupBy('organization_id')
             ->orderBy('revenue', 'DESC')
-            ->limit($limit)
-            ->get();
+            ->limit($limit);
+
+        $this->applyPermissionScope($items, 'leads.user_id');
+
+        $items = $items->get();
 
         $items = $items->map(function ($item) {
             return [
-                'id'                => $item->id,
-                'name'              => $item->name,
-                'revenue'           => $item->revenue,
+                'id' => $item->id,
+                'name' => $item->name,
+                'revenue' => $item->revenue,
                 'formatted_revenue' => core()->formatBasePrice($item->revenue),
             ];
         });
