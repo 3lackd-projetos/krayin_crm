@@ -109,159 +109,159 @@
 
         @pushOnce('scripts')
             <script type="text/x-template" id="v-stages-component-template">
-                <div class="flex gap-4">
-                    <!-- Stages Draggable Component -->
-                    <draggable
-                        tag="div"
-                        ghost-class="draggable-ghost"
-                        v-bind="{animation: 200}"
-                        item-key="id"
-                        :list="stages"
-                        :move="handleDragging"
-                        class="flex gap-4"
-                    >
-                        <template #item="{ element, index }">
-                            <div ::class="{ draggable: isDragable(element) }" class="flex gap-4 overflow-x-auto">
-                                <div class="flex min-w-[275px] max-w-[275px] flex-col justify-between rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-                                    <div class="flex flex-col gap-6 px-4 py-3">
-                                        <!-- Stage Title and Action -->
-                                        <div class="flex items-center justify-between">
-                                            <span class="py-1 font-medium dark:text-gray-300">
-                                                @{{ element.name ? element.name : 'New Added' }} 
-                                            </span>
+                    <div class="flex gap-4">
+                        <!-- Stages Draggable Component -->
+                        <draggable
+                            tag="div"
+                            ghost-class="draggable-ghost"
+                            v-bind="{animation: 200}"
+                            item-key="id"
+                            :list="stages"
+                            :move="handleDragging"
+                            class="flex gap-4"
+                        >
+                            <template #item="{ element, index }">
+                                <div ::class="{ draggable: isDragable(element) }" class="flex gap-4 overflow-x-auto">
+                                    <div class="flex min-w-[275px] max-w-[275px] flex-col justify-between rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+                                        <div class="flex flex-col gap-6 px-4 py-3">
+                                            <!-- Stage Title and Action -->
+                                            <div class="flex items-center justify-between">
+                                                <span class="py-1 font-medium dark:text-gray-300">
+                                                    @{{ element.name ? element.name : 'New Added' }} 
+                                                </span>
 
-                                            <i
-                                                v-if="isDragable(element)" 
-                                                class="icon-move cursor-grab rounded-md p-1 text-2xl transition-all hover:bg-gray-100 dark:hover:bg-gray-950"
-                                            >
-                                            </i>
-                                        </div>
+                                                <i
+                                                    v-if="isDragable(element)" 
+                                                    class="icon-move cursor-grab rounded-md p-1 text-2xl transition-all hover:bg-gray-100 dark:hover:bg-gray-950"
+                                                >
+                                                </i>
+                                            </div>
 
-                                        <!-- Cards input fields -->
-                                        <div>
-                                            <!-- Hidden Inputs Fields -->
-                                            <!-- Code -->
-                                            <input
-                                                type="hidden"
-                                                :value="slugify(element.code ? element.code : element.name)"
-                                                :name="'stages[' + element.id + '][code]'"
-                                            />
+                                            <!-- Cards input fields -->
+                                            <div>
+                                                <!-- Hidden Inputs Fields -->
+                                                <!-- Code -->
+                                                <input
+                                                    type="hidden"
+                                                    :value="slugify(element.code ? element.code : element.name)"
+                                                    :name="'stages[' + element.id + '][code]'"
+                                                />
 
-                                            <!-- Sort Order -->
-                                            <input
-                                                type="hidden"
-                                                :value="index + 1"
-                                                :name="'stages[' + element.id + '][sort_order]'"
-                                            />
+                                                <!-- Sort Order -->
+                                                <input
+                                                    type="hidden"
+                                                    :value="index + 1"
+                                                    :name="'stages[' + element.id + '][sort_order]'"
+                                                />
 
-                                            {!! view_render_event('admin.settings.pipelines.edit.form.stages.name.before', ['pipeline' => $pipeline]) !!}
+                                                {!! view_render_event('admin.settings.pipelines.edit.form.stages.name.before', ['pipeline' => $pipeline]) !!}
 
-                                            <!-- Name -->
+                                                <!-- Name -->
+                                                <x-admin::form.control-group>
+                                                    <x-admin::form.control-group.label class="required">
+                                                        @lang('admin::app.settings.pipelines.edit.name')
+                                                    </x-admin::form.control-group.label>
+
+                                                    <x-admin::form.control-group.control
+                                                        type="text"
+                                                        ::name="'stages[' + element.id + '][name]'"
+                                                        v-model="element['name']"
+                                                        ::rules="{ required: true, unique_name: stages, min: 0, max: 100 }"
+                                                        :label="trans('admin::app.settings.pipelines.edit.name')"
+                                                    />
+
+                                                    <x-admin::form.control-group.error ::name="'stages[' + element.id + '][name]'" />
+                                                </x-admin::form.control-group>
+
+                                                {!! view_render_event('admin.settings.pipelines.edit.form.stages.name.after', ['pipeline' => $pipeline]) !!}
+
+                                            <!-- Stage Color -->
                                             <x-admin::form.control-group>
-                                                <x-admin::form.control-group.label class="required">
-                                                    @lang('admin::app.settings.pipelines.edit.name')
+                                                <x-admin::form.control-group.label>
+                                                    @lang('admin::app.settings.types.index.create.color')
                                                 </x-admin::form.control-group.label>
 
                                                 <x-admin::form.control-group.control
-                                                    type="text"
-                                                    ::name="'stages[' + element.id + '][name]'"
-                                                    v-model="element['name']"
-                                                    ::rules="{ required: true, unique_name: stages, min: 0, max: 100 }"
-                                                    :label="trans('admin::app.settings.pipelines.edit.name')"
+                                                    type="color"
+                                                    ::name="'stages[' + element.id + '][color]'"
+                                                    v-model="element['color']"
+                                                    label="{{ trans('admin::app.settings.pipelines.create.color') ?? 'Color' }}"
                                                 />
-
-                                                <x-admin::form.control-group.error ::name="'stages[' + element.id + '][name]'" />
                                             </x-admin::form.control-group>
 
-                                            {!! view_render_event('admin.settings.pipelines.edit.form.stages.name.after', ['pipeline' => $pipeline]) !!}
+                                            {!! view_render_event('admin.settings.pipelines.edit.form.stages.probability.before', ['pipeline' => $pipeline]) !!}
 
-                                        <!-- Stage Color -->
-                                        <x-admin::form.control-group>
-                                            <x-admin::form.control-group.label>
-                                                @lang('admin::app.settings.types.index.create.color')
-                                            </x-admin::form.control-group.label>
+                                                <!-- Probability -->
+                                                <x-admin::form.control-group>
+                                                    <x-admin::form.control-group.label class="required">
+                                                        @lang('admin::app.settings.pipelines.edit.probability')
+                                                    </x-admin::form.control-group.label>
 
-                                            <x-admin::form.control-group.control
-                                                type="color"
-                                                ::name="'stages[' + element.id + '][color]'"
-                                                v-model="element['color']"
-                                                :label="trans('admin::app.settings.types.index.create.color')"
-                                            />
-                                        </x-admin::form.control-group>
+                                                    <x-admin::form.control-group.control
+                                                        type="text"
+                                                        ::name="'stages[' + element.id + '][probability]'"
+                                                        v-model="element['probability']"
+                                                        rules="required|numeric|min_value:0|max_value:100"
+                                                        ::readonly="element?.code != 'new'"
+                                                        :label="trans('admin::app.settings.pipelines.create.probability')"
+                                                    />
+                                                    <x-admin::form.control-group.error ::name="'stages[' + element.id + '][probability]'" />
+                                                </x-admin::form.control-group>
 
-                                        {!! view_render_event('admin.settings.pipelines.edit.form.stages.probability.before', ['pipeline' => $pipeline]) !!}
-
-                                            <!-- Probability -->
-                                            <x-admin::form.control-group>
-                                                <x-admin::form.control-group.label class="required">
-                                                    @lang('admin::app.settings.pipelines.edit.probability')
-                                                </x-admin::form.control-group.label>
-
-                                                <x-admin::form.control-group.control
-                                                    type="text"
-                                                    ::name="'stages[' + element.id + '][probability]'"
-                                                    v-model="element['probability']"
-                                                    rules="required|numeric|min_value:0|max_value:100"
-                                                    ::readonly="element?.code != 'new'"
-                                                    :label="trans('admin::app.settings.pipelines.create.probability')"
-                                                />
-                                                <x-admin::form.control-group.error ::name="'stages[' + element.id + '][probability]'" />
-                                            </x-admin::form.control-group>
-
-                                            {!! view_render_event('admin.settings.pipelines.edit.form.stages.probability.after', ['pipeline' => $pipeline]) !!}
+                                                {!! view_render_event('admin.settings.pipelines.edit.form.stages.probability.after', ['pipeline' => $pipeline]) !!}
+                                            </div>
                                         </div>
+
+                                        {!! view_render_event('admin.settings.pipelines.edit.form.stages.remove_button.before', ['pipeline' => $pipeline]) !!}
+
+                                        <!-- Remove Stage -->
+                                        <div
+                                            class="flex cursor-pointer items-center gap-2 border-t border-gray-200 p-2 text-red-600 dark:border-gray-800" 
+                                            @click="remove(element)"
+                                            v-if="isDragable(element)"
+                                        >
+                                            <i class="icon-delete text-2xl"></i>
+
+                                            @lang('admin::app.settings.pipelines.edit.delete-stage')
+                                        </div>
+
+                                        {!! view_render_event('admin.settings.pipelines.edit.form.stages.remove_button.after', ['pipeline' => $pipeline]) !!}
+                                    </div>
+                                </div>
+                            </template>
+                        </draggable>
+
+                        <!-- Add New Stage Card -->
+                        <div class="flex min-h-[400px] min-w-[275px] max-w-[275px] flex-col items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+                            <div class="flex flex-col items-center justify-center gap-6 px-4 py-3">
+                                <div class="grid justify-center justify-items-center gap-3.5 text-center">
+                                    <div class="flex flex-col items-center gap-2">
+                                        <p class="text-xl font-semibold dark:text-gray-300">
+                                            @lang('admin::app.settings.pipelines.edit.add-new-stages')
+                                        </p>
+
+                                        <p class="text-gray-400">
+                                            @lang('admin::app.settings.pipelines.edit.add-stage-info')
+                                        </p>
                                     </div>
 
-                                    {!! view_render_event('admin.settings.pipelines.edit.form.stages.remove_button.before', ['pipeline' => $pipeline]) !!}
+                                    {!! view_render_event('admin.settings.pipelines.edit.form.stages.create_button.before', ['pipeline' => $pipeline]) !!}
 
-                                    <!-- Remove Stage -->
-                                    <div
-                                        class="flex cursor-pointer items-center gap-2 border-t border-gray-200 p-2 text-red-600 dark:border-gray-800" 
-                                        @click="remove(element)"
-                                        v-if="isDragable(element)"
+                                    <!-- Add Stage Button -->
+                                    <button
+                                        class="secondary-button"
+                                        @click="addStage"
+                                        type="button"
                                     >
-                                        <i class="icon-delete text-2xl"></i>
+                                        @lang('admin::app.settings.pipelines.edit.stage-btn')
+                                    </button>
 
-                                        @lang('admin::app.settings.pipelines.edit.delete-stage')
-                                    </div>
-
-                                    {!! view_render_event('admin.settings.pipelines.edit.form.stages.remove_button.after', ['pipeline' => $pipeline]) !!}
+                                    {!! view_render_event('admin.settings.pipelines.edit.form.stages.create_button.after', ['pipeline' => $pipeline]) !!}
                                 </div>
-                            </div>
-                        </template>
-                    </draggable>
-
-                    <!-- Add New Stage Card -->
-                    <div class="flex min-h-[400px] min-w-[275px] max-w-[275px] flex-col items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-                        <div class="flex flex-col items-center justify-center gap-6 px-4 py-3">
-                            <div class="grid justify-center justify-items-center gap-3.5 text-center">
-                                <div class="flex flex-col items-center gap-2">
-                                    <p class="text-xl font-semibold dark:text-gray-300">
-                                        @lang('admin::app.settings.pipelines.edit.add-new-stages')
-                                    </p>
-
-                                    <p class="text-gray-400">
-                                        @lang('admin::app.settings.pipelines.edit.add-stage-info')
-                                    </p>
-                                </div>
-
-                                {!! view_render_event('admin.settings.pipelines.edit.form.stages.create_button.before', ['pipeline' => $pipeline]) !!}
-
-                                <!-- Add Stage Button -->
-                                <button
-                                    class="secondary-button"
-                                    @click="addStage"
-                                    type="button"
-                                >
-                                    @lang('admin::app.settings.pipelines.edit.stage-btn')
-                                </button>
-
-                                {!! view_render_event('admin.settings.pipelines.edit.form.stages.create_button.after', ['pipeline' => $pipeline]) !!}
                             </div>
                         </div>
                     </div>
-                </div>
-            </script>
+                </script>
 
             <script type="module">
                 app.component('v-stages-component', {
@@ -286,8 +286,8 @@
                                     'name': '',
                                         'probability': 100,
                                             'color': '#000000',
-                            });
-                        },
+                                });
+                            },
 
                 remove(stage) {
                     this.$emitter.emit('open-confirm-modal', {
@@ -371,8 +371,8 @@
 
                     return true;
                 },
-                    },
-                })
+                        },
+                    })
             </script>
         @endPushOnce
 </x-admin::layouts>
