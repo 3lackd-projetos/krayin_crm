@@ -108,7 +108,7 @@
                                     v-if="showUserDropdown"
                                     class="absolute top-full z-10 mt-1 w-[200px] rounded-md border bg-white shadow-lg dark:border-gray-800 dark:bg-gray-900"
                                 >
-                                    <div class="max-h-[300px] overflow-y-auto p-2">
+                                        <div class="max-h-[300px] overflow-y-auto p-2">
                                         <div class="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-950 rounded cursor-pointer" @click="filters.user_id = []">
                                             <div class="h-4 w-4 rounded border border-gray-300 dark:border-gray-600 flex items-center justify-center p-0.5" :class="{'bg-brandColor border-brandColor': filters.user_id.length === 0}">
                                                 <span v-if="filters.user_id.length === 0" class="icon-check text-white text-[10px] font-bold"></span>
@@ -116,14 +116,12 @@
                                             <span class="text-sm text-gray-600 dark:text-gray-300">@lang('All Users')</span>
                                         </div>
 
-                                        @foreach ($users as $user)
-                                            <div class="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-950 rounded cursor-pointer" @click="toggleUser({{ $user->id }})">
-                                                <div class="h-4 w-4 rounded border border-gray-300 dark:border-gray-600 flex items-center justify-center p-0.5" :class="{'bg-brandColor border-brandColor': filters.user_id.includes({{ $user->id }})}">
-                                                    <span v-if="filters.user_id.includes({{ $user->id }})" class="icon-check text-white text-[10px] font-bold"></span>
-                                                </div>
-                                                <span class="text-sm text-gray-600 dark:text-gray-300">{{ $user->name }}</span>
+                                        <div class="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-950 rounded cursor-pointer" v-for="user in users" :key="user.id" @click="toggleUser(user.id)">
+                                            <div class="h-4 w-4 rounded border border-gray-300 dark:border-gray-600 flex items-center justify-center p-0.5" :class="{'bg-brandColor border-brandColor': filters.user_id.includes(user.id)}">
+                                                <span v-if="filters.user_id.includes(user.id)" class="icon-check text-white text-[10px] font-bold"></span>
                                             </div>
-                                        @endforeach
+                                            <span class="text-sm text-gray-600 dark:text-gray-300">@{{ user.name }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             @endif
