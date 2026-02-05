@@ -237,14 +237,6 @@ return [
                 'depends' => 'enable:1',
                 'options' => [
                     [
-                        'title' => 'admin::app.configuration.index.magic-ai.settings.models.gpt-4o',
-                        'value' => 'openai/chatgpt-4o-latest',
-                    ],
-                    [
-                        'title' => 'admin::app.configuration.index.magic-ai.settings.models.gpt-4o-mini',
-                        'value' => 'openai/gpt-4o-mini',
-                    ],
-                    [
                         'title' => 'Gemini 1.5 Flash',
                         'value' => 'google/gemini-1.5-flash',
                     ],
@@ -255,18 +247,6 @@ return [
                     [
                         'title' => 'Gemini 2.0 Flash',
                         'value' => 'google/gemini-2.0-flash',
-                    ],
-                    [
-                        'title' => 'admin::app.configuration.index.magic-ai.settings.models.deepseek-r1',
-                        'value' => 'deepseek/deepseek-r1-distill-llama-8b',
-                    ],
-                    [
-                        'title' => 'admin::app.configuration.index.magic-ai.settings.models.llama-3-2-3b-instruct',
-                        'value' => 'meta-llama/llama-3.2-3b-instruct',
-                    ],
-                    [
-                        'title' => 'admin::app.configuration.index.magic-ai.settings.models.grok-2-1212',
-                        'value' => 'x-ai/grok-2-1212',
                     ],
                 ],
             ],
